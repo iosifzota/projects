@@ -133,7 +133,6 @@ void test_search()
  }
 
 
-/* TODO: Declare world_map as const and add at operator for Graph. */
 std::shared_ptr<Path> a_star_search(
         Graph<Coordinates, unsigned, std::string>& world_map,
         const std::string& start,
