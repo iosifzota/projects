@@ -1,0 +1,8 @@
+-std=c++14
+-Wall
+-Ic:/usr/lib/gcc/x86_64-pc-msys/7.3.0/include/c++
+-Ic:/usr/lib/gcc/x86_64-pc-msys/7.3.0/include/c++/x86_64-pc-msys
+-Ic:/usr/lib/gcc/x86_64-pc-msys/7.3.0/include/c++/backward
+-Ic:/usr/lib/gcc/x86_64-pc-msys/7.3.0/include
+-Ic:/usr/lib/gcc/x86_64-pc-msys/7.3.0/include-fixed
+-Ic:/usr/include
