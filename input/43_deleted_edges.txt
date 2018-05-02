@@ -1,0 +1,7 @@
+Istanbul Ierusalim 6
+Ierusalim Bagdad 7
+Belgrad Atena 3
+Budapesta Varsovia 4
+Budapesta Praga 4
+
+Atena Ankara 475

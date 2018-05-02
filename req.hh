@@ -1,0 +1,79 @@
+#ifndef __req_hh
+#define __req_hh
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#define EXPAND__MACRO( x ) x
+#define GET__one_two(_1, _2, NAME, ...) NAME
+
+/* Maybe just save the expression to const char* and
+ * pass it to a function that is TYPED. */
+
+void print_red(const char *);
+void print_green(const char *);
+
+#define req(...) EXPAND__MACRO(GET__one_two(__VA_ARGS__, req__two, req__one)(__VA_ARGS__))
+
+#define req__one(test__condition) \
+	require((test__condition) ? (1) : (0), #test__condition, __FUNCTION__, __LINE__);
+
+#define req__two(test__condition, err__msg)  \
+	require((test__condition) ? (1) : (0), #test__condition, __FUNCTION__, __LINE__, err__msg);
+
+#define tst(test__condition) \
+	require((test__condition) ? (1) : (0), #test__condition, __FUNCTION__, __LINE__);
+
+#define etst(test__condition, err__msg)  \
+	require((test__condition) ? (1) : (0), #test__condition, __FUNCTION__, __LINE__, err__msg);
+
+static inline void fatal_print_begin(const char* assertion)
+{
+	printf("\n[ ");
+	print_red("Err");
+	printf(" ] False assertion: ");
+	printf("%s", assertion);
+}
+
+static inline void fatal_print_end(const char* calling_function, int line)
+{
+	printf("\t@%s() <%d>\n", calling_function, line);
+	fflush(stdout);
+	exit(-1);
+}
+
+inline void require(bool clause, const char* assertion, const char* calling_function, int line)
+{
+	if (!clause) {
+		fatal_print_begin(assertion);
+		putchar('.');
+		fatal_print_end(calling_function, line);
+	}
+}
+
+inline void require(bool clause, const char* assertion, const char* calling_function, int line, const char* err_msg)
+{
+	if (!clause) {
+		fatal_print_begin(assertion);
+		printf(".  // %s", err_msg);
+		fatal_print_end(calling_function, line);
+	}
+}
+
+#define test_wrap(test_name, ...) {						\
+		printf("\n[ .. ] %s\n", test_name);				\
+		__VA_ARGS__;									\
+		printf("\n[ ");									\
+		print_green("OK");								\
+		printf(" ] %s\n", test_name);					\
+	}
+
+#define tt_wrap(test_name, ...) {						\
+		printf("\n\t[ .. ] %s\n", test_name);			\
+		__VA_ARGS__;									\
+		printf("\n\t[ ");								\
+		print_green("OK");								\
+		printf(" ] %s\n", test_name);					\
+	}
+
+#endif
