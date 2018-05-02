@@ -30,3 +30,14 @@
 *.exe
 *.out
 *.app
+
+# Folders
+build
+vs
+.vs
+.idea
+cmake-build-debug
+
+# Tags
+TAGS
+tags
