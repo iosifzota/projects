@@ -148,11 +148,22 @@ int main()
 	);
 
 
+
 	test_wrap("find all",
 		for (auto itr : test) {
 			req(*(test.find(itr)) == itr);
 		}
 	);
+
+	test_wrap("fail search",
+		for (unsigned i = 21; i < 35; ++i) {
+			req(test.find(i) == test.end());
+		}
+	);
+
+	auto itr = test.find(1);
+
+	std::cout << *itr;
 
 	return 0;
 }

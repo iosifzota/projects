@@ -190,7 +190,7 @@ std::list<unsigned> Graph::extract_path(const std::vector< std::pair<int, int> >
     /* Go from intersection to the left. */
     for (
         int index = intersection_index;
-        (req(index >= 0), 1) && tched[index].first != index;
+        req(index >= 0) && tched[index].first != index;
         index = tched[index].first
         )
     {
@@ -200,7 +200,7 @@ std::list<unsigned> Graph::extract_path(const std::vector< std::pair<int, int> >
     /* Go from intersection to the right. */
     for (
         int index = intersection_index;
-        (req(index >= 0), 1) && tched[index].second != index;
+        req(index >= 0) && tched[index].second != index;
         index = tched[index].second
         )
     {

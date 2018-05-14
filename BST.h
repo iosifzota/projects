@@ -28,12 +28,10 @@ namespace iz {
 		class iterator
 		{
 		private:
-			std::stack< shared<Tnode> > st;
 			shared<Tnode> current;
-			bool sentinel; // Signal end.
 
 		public:
-			explicit iterator(shared<Tnode> begin = nullptr, bool set_sentinel = true);
+			explicit iterator(shared<Tnode> begin = nullptr);
 
 			iterator& operator ++ ();
 			iterator operator ++ (int);
@@ -47,8 +45,8 @@ namespace iz {
 		};
 
 		/* Iterators */
-		iterator begin() const { // If the BST is empty begin() returns the same itr as end().
-			return iterator(root, (root != nullptr) ? false : true);
+		iterator begin() const {
+			return iterator(root);
 		}
 
 		iterator end() const {
@@ -56,9 +54,10 @@ namespace iz {
 			return itr;
 		}
 
-		void print(std::ostream& out) {
+		shared<Tnode> print(std::ostream& out) {
 			if (root != nullptr)
 				out << root;
+			return root;
 		}
 
 		/* Constuctor & disctructor */
@@ -75,12 +74,13 @@ namespace iz {
 		bool empty() const;
 		iterator find(const T& key) const;
 
-		/* Helpers */
+		/* Helpers. [TODO] => protected. */
 		shared<Tnode> search(const T&) const;
-		shared<Tnode> successor(shared<Tnode>) const;
-		shared<Tnode> predecessor(shared<Tnode>) const;
-		shared<Tnode> min(shared<Tnode>) const;
-		shared<Tnode> max(shared<Tnode>) const;
+		static shared<Tnode> static_search(const T&, const shared<Tnode>&);
+		static shared<Tnode> successor(shared<Tnode>);
+		static shared<Tnode> predecessor(shared<Tnode>);
+		static shared<Tnode> min(shared<Tnode>);
+		static shared<Tnode> max(shared<Tnode>);
 
 	protected:
 		shared<Tnode> root;
@@ -92,7 +92,6 @@ namespace iz {
 	{
 		return end().find(key, root);
 	}
-
 
 	template <typename T, typename Tnode>
 	shared<Tnode> BST<T, Tnode>::search(const T& key) const
@@ -112,8 +111,29 @@ namespace iz {
 	}
 
 	template <typename T, typename Tnode>
+	shared<Tnode> BST<T, Tnode>::static_search(const T& key, const shared<Tnode>& begin)
+	{
+		shared<Tnode> node(begin);
+
+		while (node != nullptr && node->data != key) {
+			if (key < node->data) {
+				node = node->left;
+			}
+			else {
+				node = node->right;
+			}
+		}
+
+		return node;
+	}
+
+	template <typename T, typename Tnode>
 	shared<Tnode> BST<T, Tnode>::extract(shared<Tnode> extracted)
 	{
+		if (extracted == nullptr) {
+			return nullptr;
+		}
+
 		if (extracted->left == nullptr) {
 			transplant(extracted, extracted->right);
 		}
@@ -198,7 +218,7 @@ namespace iz {
 
 	/* Macro for generating the body of successor & predecessor. */
 	#define cessor(left__right, max__min, CMP)					\
-		shared<Tnode> aux(nullptr);							\
+		shared<Tnode> aux(nullptr);								\
 																\
 		if (node == nullptr)									\
 			return aux;											\
@@ -214,13 +234,13 @@ namespace iz {
 		return aux;
 
 	template <typename T, typename Tnode>
-	shared<Tnode> BST<T, Tnode>::successor(shared<Tnode> node) const
+	shared<Tnode> BST<T, Tnode>::successor(shared<Tnode> node)
 	{
 		cessor(right, min, >);
 	}
 
 	template <typename T, typename Tnode>
-	shared<Tnode> BST<T, Tnode>::predecessor(shared<Tnode> node) const
+	shared<Tnode> BST<T, Tnode>::predecessor(shared<Tnode> node)
 	{
 		cessor(left, max, <);
 	}
@@ -228,7 +248,7 @@ namespace iz {
 
 	/* Macro for generating the body of min & max. */
 	#define mm(left__right)				\
-		shared<Tnode> aux(nullptr);	\
+		shared<Tnode> aux(nullptr);		\
 										\
 		while (node != nullptr) {		\
 			aux = node;					\
@@ -237,13 +257,13 @@ namespace iz {
 		return aux;
 
 	template <typename T, typename Tnode>
-	shared<Tnode> BST<T, Tnode>::min(shared<Tnode> node) const
+	shared<Tnode> BST<T, Tnode>::min(shared<Tnode> node)
 	{
 		mm(left);
 	}
 
 	template <typename T, typename Tnode>
-	shared<Tnode> BST<T, Tnode>::max(shared<Tnode> node) const
+	shared<Tnode> BST<T, Tnode>::max(shared<Tnode> node)
 	{
 		mm(right);
 	}
@@ -260,65 +280,28 @@ namespace iz {
 	/* BEGIN - BST::iterator - */
 	/* Constructor. */
 	template <typename T, typename Tnode>
-	BST<T, Tnode>::iterator::iterator(shared<Tnode> begin, bool set_sentinel)
-		: sentinel{ set_sentinel }
+	BST<T, Tnode>::iterator::iterator(shared<Tnode> begin)
 	{
-		if (begin == nullptr) {
-			current = nullptr;
-			return;
-		}
-
-		st.push(begin);
-		++(*this); // Initialize current.
+		current = min(begin);
 	}
 
 	/* Relational operators. */
 	template <typename T, typename Tnode>
 	bool BST<T, Tnode>::iterator::operator == (const iterator& other) const {
-		if (sentinel == other.sentinel && sentinel)
-			return true;
-
-		if (current == other.current)
-			return true;
-
-		return false;
+		return current == other.current;
 	}
 
 	template <typename T, typename Tnode>
 	bool BST<T, Tnode>::iterator::operator != (const iterator& other) const {
 		return !(*this == other);
 	}
-
 	
-
 	/* Increment operators. */
 	template <typename T, typename Tnode>
 	typename BST<T, Tnode>::iterator&
 		BST<T, Tnode>::iterator::operator ++ ()
 	{
-		if (st.empty())
-			sentinel = true;
-
-		while (!st.empty()) {
-			if (st.top() != nullptr) {
-				st.push(st.top()->left);
-				continue;
-			}
-
-			st.pop(); // pop() the nullptr.
-
-			if (!st.empty()) {
-				current = st.top();
-
-				st.pop();
-				st.push(current->right);
-			}
-			else {
-				sentinel = true;
-			}
-
-			break;
-		}
+		current = successor(current);
 		return *this;
 	}
 
@@ -334,67 +317,18 @@ namespace iz {
 	/* Immutable access. */
 	template <typename T, typename Tnode>
 	const T& BST<T, Tnode>::iterator::operator * () {
-		req(current != nullptr, "Trying to access (null) data.");
+		req(current != nullptr, "Iterator == end()");
 		return current->data;
 	}
-
-
-	template <typename T>
-	void clear_stack(std::stack<T>&);
 
 	template<typename T, typename Tnode>
 	typename BST<T, Tnode>::iterator&
 		BST<T, Tnode>::iterator::find(const T& key, const shared<Tnode>& root)
 	{
-		if (root == nullptr) {
-			sentinel = true;
-			return *this;
-		}
-
-		shared<Tnode> begin(root);
-
-		clear_stack(st);
-		sentinel = false;
-
-		st.push(begin);
-
-		while (!st.empty()) {
-			req((current = st.top()) != nullptr, "[Debug]");
-
-			if (key == current->data) {
-				st.push(nullptr); // Discard left subtree.
-				return *this;
-			}
-
-			if (key < current->data && current->left != nullptr) {
-				st.push(current->left);
-				continue;
-			}
-			else if (current->right != nullptr) {
-				st.pop(); // Discard root & left subtree.
-				st.push(current->right);
-				continue;
-			}
-
-			/* Cannot go left/right. => "Break" by cleanup. */
-			clear_stack(st);
-		}
-
-		/* The key was not found. */
-		sentinel = true;
-
+		current = static_search(key, root);
 		return *this;
 	}
 	/* END - BST::iterator - */
-
-
-
-	template <typename T>
-	void clear_stack(std::stack<T>& st)
-	{
-		while (!st.empty())
-			st.pop();
-	}
 }
 
 #endif //SD_BST_H

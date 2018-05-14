@@ -2,10 +2,12 @@
 #define __utils_hh
 
 #include <vector>
+#include <stack>
 #include <istream>
 #include <ostream>
 #include <functional>
 #include <fstream>
+#include <initializer_list>
 
 #define nl std::cout << std::endl
 #define nll nl; nl;
@@ -71,6 +73,45 @@ void swap (std::vector<T>& v, unsigned i, unsigned j)
     v[i] = v[j];
     v[j] = aux;
 }
+
+namespace iz {
+	template <typename T>
+	void dev_null(const T&) {
+		;
+	}
+
+	template <typename T>
+	void clear_stack(std::stack<T>& st)
+	{
+		while (!st.empty())
+			st.pop();
+	}
+
+	template <typename TKey, typename TVal>
+	struct pair {
+		TKey key;
+		TVal val;
+
+		pair() {};
+
+		pair(const TKey& __key, const TVal& __val) {
+			key = __key;
+			val = __val;
+		}
+
+ 		pair(const pair& other) {
+			key = other.key;
+			val = other.val;
+		}
+		 
+		const pair& operator = (const pair& other) {
+			key = other.key;
+			val = other.val;
+		}
+	};
+}
+
+
 
 // template<typename T>
 // void map(std::vector<T>& v, void (*fn)(T&))
