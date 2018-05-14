@@ -30,6 +30,10 @@ int main()
 		);
 	);
 
+    for (auto itr : mapy) {
+        std::cout << itr.first << ' ';
+    }
+
 	
 	test_wrap("range_loop",
 		for (auto itr : mapy) {

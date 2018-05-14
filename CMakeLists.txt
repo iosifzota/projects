@@ -19,10 +19,8 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
 
-add_executable(arr
-        c_array.cpp
-        req.cpp
-        )
+add_executable(arr c_array.cpp req.cpp)
+add_executable(btrees basic_btree.hh RB-node.hh rbtree.hh map.hh binary_trees.cpp req.hh req.cpp)
 
 # add_executable(mat
 #     matrix.cpp
@@ -33,11 +31,7 @@ add_executable(arr
 #     req.cpp
 #     )
 
-add_executable(a_star
-        a_star.cpp
-        req.cpp
-        get_path.cpp
-        )
+add_executable(a_star a_star.cpp req.cpp)
 
 # add_executable(heap
 #     heap.cpp
@@ -50,25 +44,13 @@ add_executable(a_star
 #     )
 #
 
-add_executable(huff
-        huffman.cpp
-        freq.cpp
-        req.cpp
-        get_path.cpp
-        )
-
-add_executable(bst
-	req.cpp
-	req.hh
-	BST.cpp
-	BST.h
-	)
+add_executable(huff huffman.cpp freq.cpp req.cpp)
 
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL GNU OR
 	${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
 	target_link_libraries(a_star m)
 endif()
-#
+
 # add_executable(vec
 #     vec.cpp
 #     req.cpp
