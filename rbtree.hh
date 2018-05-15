@@ -1,6 +1,8 @@
 #ifndef __rbtree_hh
 #define __rbtree_hh
 
+// TODO (more in basic_btree): Size;
+
 #include <iostream>
 
 #include "basic_btree.hh"
@@ -58,6 +60,19 @@ namespace iz {
 		shared_rb_node<T> extract(shared_rb_node<T>);
 	};
 
+
+    /* Called only by =insert_unique()=. */
+    template <typename T>
+    static void undo_size_inc(shared_rb_node<T> node, const shared_rb_node<T>& NIL)
+    {
+        req(node != nullptr);
+
+        for (; node != NIL; node = node->parent) {
+            req(node->size != 0, "[Debug]");
+            node->size -= 1;
+        }
+    }
+
 	template <typename T, typename Less>
 	T& rbtree<T, Less>::insert_unique(const T& val)
 	{
@@ -67,6 +82,8 @@ namespace iz {
 
 		/* --> NIL. */
 		while (current_node != NIL && not_equal(current_node->data, val)) {
+            current_node->size += 1;
+
 			current_node_parent = current_node;
 
 			if (less(val, current_node->data))
@@ -77,16 +94,17 @@ namespace iz {
 
 		/* Don't insert key twice. */
 		if (current_node != NIL) {
+            undo_size_inc(current_node_parent, NIL);
+
 			return current_node->data;
 		}
 
-		/* Allocate memory. */
 		new_node = std::make_shared< RB_Node<T> >(val, NIL, NIL);
 
-		/* Connect =new_node= to parent. */
+		/* =new_node= -> parent */
 		new_node->parent = current_node_parent;
 
-		/* Connect parent to =new_node=. */
+		/* parent -> =new_node= */
 		if (current_node_parent == NIL) {
 			root = new_node;
 		}
@@ -115,6 +133,8 @@ namespace iz {
 
 		/* Follow crumbs to NIL. */
 		while (current_node != NIL) {
+            current_node->size += 1;
+
 			current_node_parent = current_node;
 
 			if (less(new_node->data, current_node->data))
@@ -123,10 +143,10 @@ namespace iz {
 				current_node = current_node->right;
 		}
 
-		/* Connect =new_node= to parent. */
+		/* =new_node= -> parent */
 		new_node->parent = current_node_parent;
 
-		/* Connect parent to =new_node=. */
+		/* parent -> =new_node= */
 		if (current_node_parent == NIL) {
 			root = new_node;
 		}

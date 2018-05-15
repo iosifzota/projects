@@ -12,13 +12,13 @@
 int main()
 {
 	iz::map<std::string, std::string> mapy;
-	
+
 	test_wrap("[] operator",
 		mapy["Cluj"] = "North";
 		mapy["Brasov"] = "Central";
 		mapy["Eriador"] = "South-East";
 
-		tt_wrap("already_inserted_print", 
+		tt_wrap("already_inserted_print",
 			std::cout << mapy["Cluj"] << '\n';
 			std::cout << mapy["Brasov"] << '\n';
 			std::cout << mapy["Eriador"] << '\n';
@@ -34,7 +34,7 @@ int main()
         std::cout << itr.first << ' ';
     }
 
-	
+
 	test_wrap("range_loop",
 		for (auto itr : mapy) {
 			std::cout << itr.first << ' ';
@@ -53,7 +53,7 @@ int main()
 		for (auto itr : mapy) {
 			itr.second = "asdf";
 		}
-		
+
 		for (auto itr : mapy) {
 			std::cout << itr.second << ' ';
 		}

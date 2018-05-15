@@ -34,6 +34,9 @@ namespace iz {
 		shared_rb_node <T> parent;
 		RB_color color;
 
+        /* Extra */
+        unsigned size;
+
 		RB_Node();
 
 		/* Just data. */
@@ -75,11 +78,12 @@ namespace iz {
 
 	template<typename T>
 	RB_Node<T>::RB_Node()
-		: 
+		:
 		left	{ nullptr },
 		right	{ nullptr },
 		parent	{ nullptr },
 		color	{ RED },
+        size    { 0 },
 		init	{ false }
 	{}
 
@@ -90,6 +94,7 @@ namespace iz {
 		right	{ nullptr },
 		parent	{ nullptr },
 		color	{ c },
+        size    { 0 },
 		init	{ false }
 	{}
 
@@ -101,6 +106,7 @@ namespace iz {
 		right	{ nullptr },
 		parent	{ nullptr },
 		color	{ RED },
+        size    { 0 },
 		init	{ true }
 	{}
 
@@ -112,6 +118,7 @@ namespace iz {
 		left	{ nullptr },
 		right	{ nullptr },
 		color	{ RED },
+        size    { 0 },
 		init	{ true }
 	{}
 
@@ -123,6 +130,7 @@ namespace iz {
 		right	{ r },
 		parent	{ nullptr },
 		color	{ RED },
+        size    { 0 },
 		init	{ true }
 	{}
 
@@ -134,6 +142,7 @@ namespace iz {
 		right	{ r },
 		parent	{ p },
 		color	{ RED },
+        size    { 0 },
 		init	{ true }
 	{}
 
@@ -171,7 +180,7 @@ namespace iz {
 			out << "(uninitialized)";
 		}
 		else {
-			out << data << "\t\t";
+			out << data << '{' << size << '}' << "\t\t";
 		}
 
 		out << "\t\t\t\t\t::";

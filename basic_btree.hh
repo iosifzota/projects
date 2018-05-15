@@ -1,6 +1,8 @@
 #ifndef __tree_hh
 #define __tree_hh
 
+// TODO: More hooks vs agumenting base_btree
+
 #include <utility>
 #include <memory>
 
@@ -49,7 +51,11 @@ namespace iz {
             static shared<T_Node> max(shared<T_Node>);
 
             void left_rotate(shared<T_Node>);
+            void left_rotate(shared<T_Node>, std::function<void(shared<T_Node>)>);
+
             void right_rotate(shared<T_Node>);
+            void right_rotate(shared<T_Node>, std::function<void(shared<T_Node>)>);
+
             void transplant(shared<T_Node>, shared<T_Node>);
 
         public:
@@ -230,8 +236,11 @@ namespace iz {
         replacement->parent = discarded->parent;
     }
 
+
+    /* Left rotate */
     template <typename T, typename T_Node, typename Less>
-    void basic_btree<T, T_Node, Less>::left_rotate(shared<T_Node> downlifted)
+    void basic_btree<T, T_Node, Less>::left_rotate(
+            shared<T_Node> downlifted, std::function<void(shared<T_Node>)> post_hook)
     {
         shared<T_Node> uplifted;
 
@@ -264,10 +273,21 @@ namespace iz {
         /* Settle down old child. */
         uplifted->left = downlifted;
         downlifted->parent = uplifted;
+
+        post_hook(downlifted);
     }
 
     template <typename T, typename T_Node, typename Less>
-    void basic_btree<T, T_Node, Less>::right_rotate(shared<T_Node> downlifted)
+    void basic_btree<T, T_Node, Less>::left_rotate(shared<T_Node> downlifted)
+    {
+        return left_rotate(downlifted, [](shared<T_Node>) { return; });
+    }
+
+
+    /* Right rotate */
+    template <typename T, typename T_Node, typename Less>
+    void basic_btree<T, T_Node, Less>::right_rotate(
+            shared<T_Node> downlifted, std::function<void(shared<T_Node>)> post_hook)
     {
         shared<T_Node> uplifted;
 
@@ -300,7 +320,16 @@ namespace iz {
         /* Settle down old child. */
         uplifted->right = downlifted;
         downlifted->parent = uplifted;
+
+        post_hook(downlifted);
     }
+
+    template <typename T, typename T_Node, typename Less>
+    void basic_btree<T, T_Node, Less>::right_rotate(shared<T_Node> downlifted)
+    {
+        return right_rotate(downlifted, [](shared<T_Node>) { return; });
+    }
+
 
     /* Macro for generating the body of successor & predecessor. */
 #define generate_predecessor__successor(left__right, max__min)	\
