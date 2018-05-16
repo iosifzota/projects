@@ -8,6 +8,9 @@
 #include <functional>
 #include <type_traits>
 
+/* temp */
+#include <iostream>
+
 #include "rbtree.hh"
 #include "RB-node.hh"
 #include "generic.hh"
@@ -49,7 +52,7 @@ namespace iz {
 		class base_iterator
 		{
 		protected:
-			shared_map_node<Key, Val> current;
+            std::weak_ptr< RB_Node< std::pair<Key, Val> > > current;
 
 		public:
 
@@ -169,6 +172,11 @@ namespace iz {
 		}
 
 		inline Val& operator [] (const Key& key);
+
+        /* Auguments. */
+		using rb_map_tree<Key, Val, Less>::size;
+		using rb_map_tree<Key, Val, Less>::empty;
+		using rb_map_tree<Key, Val, Less>::clear;
 	};
 
 	template <typename Key, typename Val, typename Less>
@@ -208,7 +216,7 @@ namespace iz {
 	 */
 	template <typename Key, typename Val, typename Less>
 	bool map<Key, Val, Less>::base_iterator::operator == (const base_iterator& other) const {
-		return current == other.current;
+		return static_cast< shared_map_node<Key, Val> >(current) == static_cast< shared_map_node<Key, Val> >(other.current);
 	}
 
 	template <typename Key, typename Val, typename Less>
@@ -232,7 +240,9 @@ namespace iz {
 	typename map<Key, Val, Less>::forward_iterator&
 		map<Key, Val, Less>::forward_iterator::operator ++ ()
 	{
-		current = successor(current);
+        req(!current.expired());
+
+		current = successor(static_cast< shared_map_node<Key, Val> >(current));
 		return *this;
 	}
 
@@ -250,7 +260,9 @@ namespace iz {
 	typename map<Key, Val, Less>::forward_iterator&
 		map<Key, Val, Less>::forward_iterator::operator -- ()
 	{
-		current = predecessor(current);
+        req(!current.expired());
+
+		current = predecessor(static_cast< shared_map_node<Key, Val> >(current));
 		return *this;
 	}
 
@@ -269,10 +281,14 @@ namespace iz {
 	 */
 	template <typename Key, typename Val, typename Less>
 	std::pair<const Key&, const Val&> map<Key, Val, Less>::const_iterator::operator * () {
-		req(current != nullptr);
-		req(current != NIL);
+        shared_map_node<Key, Val> temp(static_cast< shared_map_node<Key, Val> >(current));
 
-		return current->data;
+		req(temp != nullptr);
+		req(temp != NIL);
+
+        std::cout << temp->data << '\n'; // temp
+
+		return temp->data;
 	}
 
 	/*
@@ -280,12 +296,15 @@ namespace iz {
 	 */
 	template <typename Key, typename Val, typename Less>
 	std::pair<const Key, Val&> map<Key, Val, Less>::iterator::operator * () {
-		req(current != nullptr);
-		req(current != NIL);
+        shared_map_node<Key, Val> temp(static_cast< shared_map_node<Key, Val> >(current));
 
-		std::pair<const Key&, Val&> temp({ current->data.first, current->data.second });
+		req(temp != nullptr);
+		req(temp != NIL);
 
-		return temp;
+        std::cout << temp->data << '\n'; // temp
+
+		std::pair<const Key&, Val&> aux({ temp->data.first, temp->data.second });
+		return aux;
 	}
 
 
@@ -305,7 +324,9 @@ namespace iz {
 	typename map<Key, Val, Less>::backward_iterator&
 		map<Key, Val, Less>::backward_iterator::operator ++ ()
 	{
-		current = predecessor(current);
+        req(!current.expired());
+
+		current = predecessor(static_cast< shared_map_node<Key, Val> >(current));
 		return *this;
 	}
 
@@ -323,7 +344,9 @@ namespace iz {
 	typename map<Key, Val, Less>::backward_iterator&
 		map<Key, Val, Less>::backward_iterator::operator -- ()
 	{
-		current = successor(current);
+        req(!current.expired());
+
+		current = successor(static_cast< shared_map_node<Key, Val> >(current));
 		return *this;
 	}
 
@@ -342,10 +365,14 @@ namespace iz {
 	*/
 	template <typename Key, typename Val, typename Less>
 	std::pair<const Key&, const Val&> map<Key, Val, Less>::const_reverse_iterator::operator * () {
-		req(current != nullptr);
-		req(current != NIL);
+        shared_map_node<Key, Val> temp(static_cast< shared_map_node<Key, Val> >(current));
 
-		return current->data;
+		req(temp != nullptr);
+		req(temp != NIL);
+
+        std::cout << temp->data << '\n'; // temp
+
+		return temp->data;
 	}
 
 	/*
@@ -353,12 +380,15 @@ namespace iz {
 	*/
 	template <typename Key, typename Val, typename Less>
 	std::pair<const Key, Val&> map<Key, Val, Less>::reverse_iterator::operator * () {
-		req(current != nullptr);
-		req(current != NIL);
+        shared_map_node<Key, Val> temp(static_cast< shared_map_node<Key, Val> >(current));
 
-		std::pair<const Key&, Val&> temp({ current->data.first, current->data.second });
+		req(temp != nullptr);
+		req(temp != NIL);
 
-		return temp;
+        std::cout << temp->data << '\n'; // temp
+
+		std::pair<const Key&, Val&> aux({ temp->data.first, temp->data.second });
+		return aux;
 	}
 
 }

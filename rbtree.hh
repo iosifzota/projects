@@ -32,6 +32,7 @@ namespace iz {
 		using basic_btree<T, RB_Node<T>, Less>::successor;
 		using basic_btree<T, RB_Node<T>, Less>::predecessor;
 
+
 	private:
 		void setup_sentinel(const shared_rb_node<T>& node) {
 			req(node != nullptr);
@@ -55,9 +56,19 @@ namespace iz {
 			std::cout << root;
 		}
 
+        unsigned size() const;
+
+        static void rotate_metadata_fix(const shared_rb_node<T>&, const shared_rb_node<T>&);
+        static void upwards_branch_metadata_refresh(shared_rb_node<T>);
+
 		T& insert(const T&);
 		T& insert_unique(const T&);
 		shared_rb_node<T> extract(shared_rb_node<T>);
+		shared_rb_node<T> extract(const T&);
+
+        /* Auguments. */
+		using basic_btree<T, RB_Node<T>, Less>::empty;
+		using basic_btree<T, RB_Node<T>, Less>::clear;
 	};
 
 
@@ -190,14 +201,14 @@ namespace iz {
 				/* Red in line. */
 				else if (inserted == inserted->parent->right) {
 					inserted = inserted->parent;
-					left_rotate(inserted);
+					left_rotate(inserted, rotate_metadata_fix);
 				}
 
 				/* Slurp one red to the other left. */
 				inserted->parent->color = BLACK;
 				grandpa->color = RED;
 
-				right_rotate(inserted->parent->parent);
+				right_rotate(inserted->parent->parent, rotate_metadata_fix);
 			}
 			else {
 				grandpa = inserted->parent->parent;
@@ -217,18 +228,24 @@ namespace iz {
 				/* Red in line. */
 				else if (inserted == inserted->parent->left) {
 					inserted = inserted->parent;
-					right_rotate(inserted);
+					right_rotate(inserted, rotate_metadata_fix);
 				}
 
 				/* Slurp one red to the other left. */
 				inserted->parent->color = BLACK;
 				grandpa->color = RED;
 
-				left_rotate(grandpa);
+				left_rotate(grandpa, rotate_metadata_fix);
 			}
 		}
 		root->color = BLACK;
 	}
+
+	template <typename T, typename Less>
+	shared_rb_node<T> rbtree<T, Less>::extract(const T& data)
+    {
+        extract(search(data));
+    }
 
 	template <typename T, typename Less>
 	shared_rb_node<T> rbtree<T, Less>::extract(shared_rb_node<T> extracted)
@@ -247,11 +264,15 @@ namespace iz {
 
 		if (extracted->left == NIL) {
 			uplifted = extracted->right;
+
 			transplant(extracted, uplifted);
+            upwards_branch_metadata_refresh(uplifted->parent);
 		}
 		else if (extracted->right == NIL) {
 			uplifted = extracted->left;
+
 			transplant(extracted, uplifted);
+            upwards_branch_metadata_refresh(uplifted->parent);
 		}
 		else {
 			req((barfed = successor(extracted)) != NIL);
@@ -260,7 +281,7 @@ namespace iz {
 			uplifted = barfed->right;
 
 			if (barfed->parent == extracted) {
-				uplifted->parent = barfed;  // The crumbs (in case =uplifted= is NIL).
+				uplifted->parent = barfed;  // The crumbs (!only in case =uplifted= is NIL).
 			}
 			else {
 				transplant(barfed, barfed->right);
@@ -276,6 +297,8 @@ namespace iz {
 
 			/* Monkey move.  */
 			barfed->color = extracted->color;
+
+            upwards_branch_metadata_refresh(uplifted->parent);
 		}
 
 		if (barfed_original_color == BLACK) {
@@ -298,7 +321,7 @@ namespace iz {
 					bro->color = BLACK;
 					uplifted->parent->color = RED;
 
-					left_rotate(uplifted->parent);
+					left_rotate(uplifted->parent, rotate_metadata_fix);
 
 					bro = uplifted->parent->right;
 					continue;
@@ -312,14 +335,15 @@ namespace iz {
 					bro->left->color = BLACK;
 					bro->color = RED;
 
-					right_rotate(bro);
+					right_rotate(bro, rotate_metadata_fix);
+
 					bro = uplifted->parent->right;
 				}
 
 				bro->color = uplifted->parent->color;
 				uplifted->parent->color = BLACK;
 
-				left_rotate(uplifted->parent);
+				left_rotate(uplifted->parent, rotate_metadata_fix);
 
 				uplifted = root;
 			}
@@ -330,7 +354,7 @@ namespace iz {
 					bro->color = BLACK;
 					uplifted->parent->color = RED;
 
-					right_rotate(uplifted->parent);
+					right_rotate(uplifted->parent, rotate_metadata_fix);
 
 					bro = uplifted->parent->left;
 					continue;
@@ -344,19 +368,48 @@ namespace iz {
 					bro->right->color = BLACK;
 					bro->color = RED;
 
-					left_rotate(bro);
+					left_rotate(bro, rotate_metadata_fix);
+
 					bro = uplifted->parent->left;
 				}
 
 				bro->color = uplifted->parent->color;
 				uplifted->parent->color = BLACK;
 
-				right_rotate(uplifted->parent);
+				right_rotate(uplifted->parent, rotate_metadata_fix);
 
 				uplifted = root;
 			}
 		}
 	}
+
+	template <typename T, typename Less>
+    void rbtree<T, Less>::rotate_metadata_fix(
+            const shared_rb_node<T>& downlifted,
+            const shared_rb_node<T>& uplifted)
+    {
+        uplifted->size = downlifted->size;
+
+        downlifted->size = downlifted->left->size + downlifted->right->size + 1;
+    }
+
+	template <typename T, typename Less>
+    void rbtree<T, Less>::upwards_branch_metadata_refresh(shared_rb_node<T> node)
+    {
+        req(node != nullptr);
+
+        /* 'til root refresh metadata. */
+        for (; node != NIL; node = node->parent)
+            node->size = node->left->size + node->right->size + 1;
+    }
+
+	template <typename T, typename Less>
+    unsigned rbtree<T, Less>::size() const
+    {
+        req(root != nullptr, "[Debug]");
+
+        return root->size;
+    }
 }
 
 #endif

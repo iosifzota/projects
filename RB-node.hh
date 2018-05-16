@@ -106,7 +106,7 @@ namespace iz {
 		right	{ nullptr },
 		parent	{ nullptr },
 		color	{ RED },
-        size    { 0 },
+        size    { 1 },
 		init	{ true }
 	{}
 
@@ -118,7 +118,7 @@ namespace iz {
 		left	{ nullptr },
 		right	{ nullptr },
 		color	{ RED },
-        size    { 0 },
+        size    { 1 },
 		init	{ true }
 	{}
 
@@ -130,7 +130,7 @@ namespace iz {
 		right	{ r },
 		parent	{ nullptr },
 		color	{ RED },
-        size    { 0 },
+        size    { 1 },
 		init	{ true }
 	{}
 
@@ -142,7 +142,7 @@ namespace iz {
 		right	{ r },
 		parent	{ p },
 		color	{ RED },
-        size    { 0 },
+        size    { 1 },
 		init	{ true }
 	{}
 
@@ -170,6 +170,14 @@ namespace iz {
 	{
 		return (n != nullptr) ? out << *n : out << "Node: (null)\n";
 	}
+
+
+    /* temp */
+    template <typename Key, typename Val>
+    std::ostream& operator << (std::ostream& out, const std::pair<Key, Val>& data)
+    {
+        return out << data.first << " => " << data.second;
+    }
 
 	template<typename T>
 	std::ostream& RB_Node<T>::print_data(std::ostream& out, const char *node_str) const

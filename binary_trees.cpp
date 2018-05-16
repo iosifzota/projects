@@ -12,11 +12,13 @@
 int main()
 {
 	iz::map<std::string, std::string> mapy;
+    req(mapy.empty());
 
-	test_wrap("[] operator",
+	test_wrap("[] operator + size",
 		mapy["Cluj"] = "North";
 		mapy["Brasov"] = "Central";
 		mapy["Eriador"] = "South-East";
+        req(mapy.size() == 3);
 
 		tt_wrap("already_inserted_print",
 			std::cout << mapy["Cluj"] << '\n';
@@ -28,6 +30,7 @@ int main()
 			mapy["Eriador"] = "EVERYWHERE";
 			std::cout << mapy["Eriador"] << '\n';
 		);
+
 	);
 
     for (auto itr : mapy) {
@@ -60,12 +63,47 @@ int main()
 		std::cout << '\n';
 	);
 
-	test_wrap("find()",
+	test_wrap("find() + size, empty",
 		for (auto i = mapy.find("Cluj"); i != mapy.end(); ++i) {
 			std::cout << (*i).first << ' ';
 		}
 		std::cout << '\n';
+
+        /* final map size check */
+        req(mapy.size() == 3);
+        req(!mapy.empty());
 	);
+
+    test_wrap("map clear()",
+        mapy.clear();
+        req(mapy.empty());
+    );
+
+
+    test_wrap("rbtree - insert, size, itr, empty",
+        iz::rbtree<int> redblack;
+        req(redblack.empty());
+
+        std::vector<int> aux;
+
+        for (auto itr : { 95, 196, 302, 32, 22, 399, 490, 171, 497, 114, 91, 110, 69}) {
+            aux.push_back(itr);
+            redblack.insert(itr);
+        }
+        req(aux.size() == redblack.size());
+
+        for (auto& itr : redblack) {
+            std::cout << itr << ' ';
+        }
+        std::cout << '\n';
+
+        req(!redblack.empty());
+
+        tt_wrap("rbtree - clear",
+            redblack.clear();
+            req(redblack.empty());
+        );
+    );
 
 	return 0;
 }

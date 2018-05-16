@@ -38,7 +38,6 @@ int test()
 	req(x.find(5) == x.end());
 
 	req(x.find(234) == x.end());
-	req(x.search(34) == iz::rb_tree<int>::NIL);
 
 	for (auto itr : x) {
 		std::cout << itr << ' ';

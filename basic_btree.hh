@@ -5,6 +5,10 @@
 
 #include <utility>
 #include <memory>
+#include <functional>
+
+/*temp */
+#include <iostream>
 
 #include "req.hh"
 
@@ -50,11 +54,13 @@ namespace iz {
             static shared<T_Node> min(shared<T_Node>);
             static shared<T_Node> max(shared<T_Node>);
 
+            void left_rotate(shared<T_Node>,
+                    std::function<void(shared<T_Node> downlifted, shared<T_Node> uplifted)> post_hook);
             void left_rotate(shared<T_Node>);
-            void left_rotate(shared<T_Node>, std::function<void(shared<T_Node>)>);
 
+            void right_rotate(shared<T_Node>,
+                    std::function<void(shared<T_Node> downlifted, shared<T_Node> uplifted)> post_hook);
             void right_rotate(shared<T_Node>);
-            void right_rotate(shared<T_Node>, std::function<void(shared<T_Node>)>);
 
             void transplant(shared<T_Node>, shared<T_Node>);
 
@@ -66,7 +72,8 @@ namespace iz {
             class const_iterator
             {
                 protected:
-                    shared<T_Node> current;
+                    // shared<T_Node> current;
+                    std::weak_ptr<T_Node> current;
 
                 public:
                     const_iterator(shared<T_Node> begin = NIL);
@@ -94,6 +101,7 @@ namespace iz {
             }
             const_iterator find(const T&) const;
 
+            inline void clear();
             inline bool empty() const;
             shared<T_Node> search(const T&) const;
 
@@ -119,7 +127,9 @@ namespace iz {
     /* Relational operators. */
     template <typename T, typename T_Node, typename Less>
     bool basic_btree<T, T_Node, Less>::const_iterator::operator == (const const_iterator& other) const {
-        return current == other.current;
+        req(!current.expired(), "Iterator was invalidated.");
+
+        return static_cast< shared<T_Node> >(current) == static_cast< shared<T_Node> >(other.current);
     }
 
     template <typename T, typename T_Node, typename Less>
@@ -132,7 +142,9 @@ namespace iz {
     typename basic_btree<T, T_Node, Less>::const_iterator&
         basic_btree<T, T_Node, Less>::const_iterator::operator ++ ()
     {
-        current = successor(current);
+        req(!current.expired(), "Iterator was invalidated.");
+
+        current = successor(static_cast< shared<T_Node> >(current));
         return *this;
     }
 
@@ -150,7 +162,9 @@ namespace iz {
     typename basic_btree<T, T_Node, Less>::const_iterator&
         basic_btree<T, T_Node, Less>::const_iterator::operator -- ()
     {
-        current = predecessor(current);
+        req(!current.expired(), "Iterator was invalidated.");
+
+        current = predecessor(static_cast< shared<T_Node> >(current));
         return *this;
     }
 
@@ -167,9 +181,14 @@ namespace iz {
     template <typename T, typename T_Node, typename Less>
     const T& basic_btree<T, T_Node, Less>::const_iterator::operator * ()
     {
-        req(current != nullptr);
-        req(current != NIL);
-        return current->data;
+        shared<T_Node> temp(static_cast< shared<T_Node> >(current));
+
+        req(temp != nullptr);
+        req(temp != NIL);
+
+        std::cout << " {" << temp->size << "} "; // temp
+
+        return temp->data;
     }
 
     /* Search for key btree of =root=. */
@@ -239,8 +258,8 @@ namespace iz {
 
     /* Left rotate */
     template <typename T, typename T_Node, typename Less>
-    void basic_btree<T, T_Node, Less>::left_rotate(
-            shared<T_Node> downlifted, std::function<void(shared<T_Node>)> post_hook)
+    void basic_btree<T, T_Node, Less>::left_rotate(shared<T_Node> downlifted,
+            std::function<void(shared<T_Node>, shared<T_Node>)> post_hook)
     {
         shared<T_Node> uplifted;
 
@@ -274,20 +293,20 @@ namespace iz {
         uplifted->left = downlifted;
         downlifted->parent = uplifted;
 
-        post_hook(downlifted);
+        post_hook(downlifted, uplifted);
     }
 
     template <typename T, typename T_Node, typename Less>
     void basic_btree<T, T_Node, Less>::left_rotate(shared<T_Node> downlifted)
     {
-        return left_rotate(downlifted, [](shared<T_Node>) { return; });
+        return left_rotate(downlifted, [](shared<T_Node>, shared<T_Node>) { return; });
     }
 
 
     /* Right rotate */
     template <typename T, typename T_Node, typename Less>
-    void basic_btree<T, T_Node, Less>::right_rotate(
-            shared<T_Node> downlifted, std::function<void(shared<T_Node>)> post_hook)
+    void basic_btree<T, T_Node, Less>::right_rotate( shared<T_Node> downlifted,
+            std::function<void(shared<T_Node>, shared<T_Node>)> post_hook)
     {
         shared<T_Node> uplifted;
 
@@ -321,13 +340,13 @@ namespace iz {
         uplifted->right = downlifted;
         downlifted->parent = uplifted;
 
-        post_hook(downlifted);
+        post_hook(downlifted, uplifted);
     }
 
     template <typename T, typename T_Node, typename Less>
     void basic_btree<T, T_Node, Less>::right_rotate(shared<T_Node> downlifted)
     {
-        return right_rotate(downlifted, [](shared<T_Node>) { return; });
+        return right_rotate(downlifted, [](shared<T_Node>, shared<T_Node>) { return; });
     }
 
 
@@ -387,6 +406,16 @@ namespace iz {
     bool basic_btree<T, T_Node, Less>::empty() const
     {
         return root == NIL;
+    }
+
+    template <typename T, typename T_Node, typename Less>
+    void basic_btree<T, T_Node, Less>::clear()
+    {
+        req(root != nullptr);
+        req(NIL != nullptr);
+
+        NIL->parent = nullptr;
+        root = NIL;
     }
 
 
