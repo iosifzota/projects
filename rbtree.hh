@@ -33,6 +33,7 @@ namespace iz {
 		using basic_btree<T, RB_Node<T>, Less>::predecessor;
 
 
+
 	private:
 		void setup_sentinel(const shared_rb_node<T>& node) {
 			req(node != nullptr);
@@ -69,6 +70,15 @@ namespace iz {
         /* Auguments. */
 		using basic_btree<T, RB_Node<T>, Less>::empty;
 		using basic_btree<T, RB_Node<T>, Less>::clear;
+
+		/* TODO: To protected. */
+		using basic_btree<T, RB_Node<T>, Less>::preorder_map;
+		using basic_btree<T, RB_Node<T>, Less>::operator=;
+
+        const rbtree& operator = (const rbtree& other) {
+            *this = other;
+            return *this;
+        }
 	};
 
 

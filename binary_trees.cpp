@@ -80,8 +80,8 @@ int main()
     );
 
 
+    iz::rbtree<int> redblack;
     test_wrap("rbtree - insert, size, itr, empty",
-        iz::rbtree<int> redblack;
         req(redblack.empty());
 
         std::vector<int> aux;
@@ -99,11 +99,19 @@ int main()
 
         req(!redblack.empty());
 
+		std::cout << "\nPreorder:\n";
+		redblack.preorder_map([](iz::shared_rb_node<int> node) {
+			std::cout << node->data << ' ';
+		});
+		std::cout << '\n';
+
         tt_wrap("rbtree - clear",
             redblack.clear();
             req(redblack.empty());
         );
     );
+	
+
 
 	return 0;
 }

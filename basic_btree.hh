@@ -1,11 +1,12 @@
 #ifndef __tree_hh
 #define __tree_hh
 
-// TODO: More hooks vs agumenting base_btree
+// TODO: More hooks vs augmenting base_btree
 
 #include <utility>
 #include <memory>
 #include <functional>
+#include <stack>
 
 /*temp */
 #include <iostream>
@@ -53,6 +54,9 @@ namespace iz {
             static shared<T_Node> predecessor(shared<T_Node>);
             static shared<T_Node> min(shared<T_Node>);
             static shared<T_Node> max(shared<T_Node>);
+
+			/* Map functions. */
+			static void static_preorder_map(shared<T_Node>, std::function<void(shared<T_Node>)>);
 
             void left_rotate(shared<T_Node>,
                     std::function<void(shared<T_Node> downlifted, shared<T_Node> uplifted)> post_hook);
@@ -104,6 +108,11 @@ namespace iz {
             inline void clear();
             inline bool empty() const;
             shared<T_Node> search(const T&) const;
+
+			void preorder_map(std::function<void(shared<T_Node>)>);
+
+			/* HERE */
+			void operator = (const basic_btree& other);
 
             /* Interface. */
             virtual T& insert(const T&) = 0;
@@ -202,6 +211,48 @@ namespace iz {
     /* # End Of::iterator */
 
 
+	/* HERE */
+	template <typename T, typename T_Node, typename Less>
+	void basic_btree<T, T_Node, Less>::operator = (const basic_btree<T, T_Node, Less>& other)
+	{
+		std::stack< shared<T_Node> > fringe;
+
+		clear();
+		root = std::make_shared< shared<T_Node> >(NIL, NIL, NIL);
+
+		fringe.push(root);
+
+		other.preorder_map([&](shared<T_Node> other_node) {
+
+			shared<T_Node> current;
+
+			req(!fringe.empty());
+
+			current = fringe.top();
+			fringe.pop();
+
+			*current = *other_node;
+
+            /* FOR { child of =other_node= | child is !NIL} => current gets a child. */
+            if (other_node->right != NIL) {
+                current->right = std::make_shared< shared<T_Node> >(NIL, NIL, current);
+                push(current->right);
+            }
+            else {
+                current->right = NIL;
+            }
+
+            if (other_node->left != NIL) {
+                current->left = std::make_shared< shared<T_Node> >(NIL, NIL, current);
+                push(current->left);
+            }
+            else {
+                current->left = NIL;
+            }
+
+		});
+	}
+
     /* Search =this= tree. */
     template <typename T, typename T_Node, typename Less>
     shared<T_Node> basic_btree<T, T_Node, Less>::search(const T& key) const
@@ -219,6 +270,42 @@ namespace iz {
 
         return node;
     }
+
+	template <typename T, typename T_Node, typename Less>
+	void basic_btree<T, T_Node, Less>::preorder_map(std::function<void(shared<T_Node>)> action)
+	{
+		return static_preorder_map(root, action);
+	}
+
+	template <typename T, typename T_Node, typename Less>
+	void basic_btree<T, T_Node, Less>::static_preorder_map(shared<T_Node> begin, std::function<void(shared<T_Node>)> action)
+	{
+		std::stack< shared<T_Node> > fringe;
+		shared<T_Node> current;
+
+		if (begin != NIL) {
+			req(begin != nullptr);
+
+			fringe.push(begin);
+		}
+
+		while (!fringe.empty()) {
+			current = fringe.top();
+			fringe.pop();
+
+			req(current != nullptr);
+
+			action(current);
+
+			if (current->right != NIL) {
+				fringe.push(current->right);
+			}
+
+			if (current->left != NIL) {
+				fringe.push(current->right);
+			}
+		}
+	}
 
     /* Search tree of root =begin=. */
     template <typename T, typename T_Node, typename Less>

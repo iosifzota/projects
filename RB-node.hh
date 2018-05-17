@@ -4,6 +4,8 @@
 #include <ostream>
 #include <memory>
 
+#include "req.hh"
+
 namespace iz {
 	enum RB_color {
 		RED,
@@ -44,6 +46,9 @@ namespace iz {
 
 		explicit RB_Node(RB_color);
 
+		/* HERE */
+		const RB_Node& operator = (const RB_Node&);
+
 		/* Data and parent. */
 		RB_Node(const T&, const shared_rb_node<T>&);
 
@@ -52,6 +57,9 @@ namespace iz {
 
 		/* Data, left, right children and parent. */
 		RB_Node(const T&, const shared_rb_node <T>&, const shared_rb_node<T>&, const shared_rb_node<T>&);
+
+        /* And HERE */
+		RB_Node(const shared_rb_node <T>&, const shared_rb_node<T>&, const shared_rb_node<T>&);
 
 		/* Reset left, right, parent to `nullptr`. */
 		~RB_Node();
@@ -75,6 +83,21 @@ namespace iz {
 		/* Used in `print_data` to avoid printing garbage values. */
 		bool init;
 	};
+
+	template <typename T>
+	const RB_Node<T>& RB_Node<T>::operator = (const RB_Node& other)
+	{
+		req(other.init);
+
+		data = other.data;
+		color = other.color;
+
+		size = 1;
+		init = true;
+		left = right = parent = nullptr;
+
+		return *this;
+	}
 
 	template<typename T>
 	RB_Node<T>::RB_Node()
@@ -146,6 +169,17 @@ namespace iz {
 		init	{ true }
 	{}
 
+
+	template<typename T>
+	RB_Node<T>::RB_Node(const shared_rb_node<T>& l, const shared_rb_node<T>& r, const shared_rb_node<T>& p)
+		:
+		left{ l },
+		right{ r },
+		parent{ p },
+		color{ RED },
+		size{ 0 },
+		init{ false }
+	{}
 
 	template<typename T>
 	RB_Node<T>::~RB_Node()
