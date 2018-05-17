@@ -1,7 +1,8 @@
 #ifndef __rbtree_hh
 #define __rbtree_hh
 
-// TODO (more in basic_btree): Size;
+// TODO: postorder
+// TODO: print_tree(enum print_tree_option { ERR, preorder, inorder, postorder } )
 
 #include <iostream>
 
@@ -71,14 +72,9 @@ namespace iz {
 		using basic_btree<T, RB_Node<T>, Less>::empty;
 		using basic_btree<T, RB_Node<T>, Less>::clear;
 
-		/* TODO: To protected. */
+		/* */
 		using basic_btree<T, RB_Node<T>, Less>::preorder_map;
 		using basic_btree<T, RB_Node<T>, Less>::operator=;
-
-        const rbtree& operator = (const rbtree& other) {
-            *this = other;
-            return *this;
-        }
 	};
 
 

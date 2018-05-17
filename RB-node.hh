@@ -3,6 +3,7 @@
 
 #include <ostream>
 #include <memory>
+#include <cstring>
 
 #include "req.hh"
 
@@ -46,9 +47,6 @@ namespace iz {
 
 		explicit RB_Node(RB_color);
 
-		/* HERE */
-		const RB_Node& operator = (const RB_Node&);
-
 		/* Data and parent. */
 		RB_Node(const T&, const shared_rb_node<T>&);
 
@@ -58,7 +56,7 @@ namespace iz {
 		/* Data, left, right children and parent. */
 		RB_Node(const T&, const shared_rb_node <T>&, const shared_rb_node<T>&, const shared_rb_node<T>&);
 
-        /* And HERE */
+        /* mehh */
 		RB_Node(const shared_rb_node <T>&, const shared_rb_node<T>&, const shared_rb_node<T>&);
 
 		/* Reset left, right, parent to `nullptr`. */
@@ -70,6 +68,8 @@ namespace iz {
 		inline const T& operator()() const;
 
 		inline std::ostream& print_data(std::ostream&, const char *) const;
+
+		const RB_Node& operator = (const RB_Node&); // meh ...
 
 		/* Print RB_Node/shared_rb_node. */
 		friend std::ostream& operator<< <>(std::ostream&, const RB_Node<T>&);
@@ -89,12 +89,13 @@ namespace iz {
 	{
 		req(other.init);
 
-		data = other.data;
-		color = other.color;
-
-		size = 1;
-		init = true;
-		left = right = parent = nullptr;
+		init	= other.init;
+		data	= other.data;
+		color	= other.color;
+		size	= other.size;
+		left	= other.left;
+		right	= other.right;
+		parent	= other.parent;
 
 		return *this;
 	}
@@ -108,7 +109,9 @@ namespace iz {
 		color	{ RED },
         size    { 0 },
 		init	{ false }
-	{}
+	{
+		memset(&data, 0, sizeof(data));
+	}
 
 	template<typename T>
 	RB_Node<T>::RB_Node(RB_color c)
@@ -119,7 +122,9 @@ namespace iz {
 		color	{ c },
         size    { 0 },
 		init	{ false }
-	{}
+	{
+		memset(&data, 0, sizeof(data));
+	}
 
 	template<typename T>
 	RB_Node<T>::RB_Node(const T& d)
@@ -179,7 +184,9 @@ namespace iz {
 		color{ RED },
 		size{ 0 },
 		init{ false }
-	{}
+	{
+		memset(&data, 0, sizeof(data));
+	}
 
 	template<typename T>
 	RB_Node<T>::~RB_Node()

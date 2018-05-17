@@ -9,6 +9,21 @@
 
 #include "map.hh"
 
+struct int_str {
+	int x;
+	std::string str;
+};
+
+namespace std {
+	template<>
+	struct less<int_str> {
+		bool operator () (const int_str& lhs, const int_str& rhs)
+		{
+			return lhs.x < rhs.x;
+		}
+	};
+}
+
 int main()
 {
 	iz::map<std::string, std::string> mapy;
@@ -79,46 +94,64 @@ int main()
         req(mapy.empty());
     );
 
+	iz::rbtree<int> test_eq;
+	iz::rbtree<int> redblack;
+	test_wrap("rbtree - insert, size, itr, empty",
+		req(redblack.empty());
 
-    iz::rbtree<int> redblack;
-    test_wrap("rbtree - insert, size, itr, empty",
-        req(redblack.empty());
+		std::vector<int> aux;
 
-        std::vector<int> aux;
+		for (auto itr : { 95, 196, 302, 32, 22, 399, 490, 171, 497, 114, 91, 110, 69}) {
+			aux.push_back(itr);
+			redblack.insert(itr);
+		}
+		req(aux.size() == redblack.size());
 
-        for (auto itr : { 95, 196, 302, 32, 22, 399, 490, 171, 497, 114, 91, 110, 69}) {
-            aux.push_back(itr);
-            redblack.insert(itr);
-        }
-        req(aux.size() == redblack.size());
-
-        for (auto& itr : redblack) {
-            std::cout << itr << ' ';
-        }
-        std::cout << '\n';
-
-        req(!redblack.empty());
-
-		std::cout << "\nPreorder:\n";
-		redblack.preorder_map([](iz::shared_rb_node<int> node) {
-			std::cout << node->data << ' ';
-		});
+		for (auto& itr : redblack) {
+			std::cout << itr << ' ';
+		}
 		std::cout << '\n';
 
-        tt_wrap("rbtree - clear",
-            redblack.clear();
-            req(redblack.empty());
-        );
-    );
+		req(!redblack.empty());
 
-    iz::rbtree<int> test_eq;
+		tt_wrap("Preorder",
+			redblack.preorder_map([](iz::shared_rb_node<int> node) {
+				std::cout << node->data << ' ';
+			});
+			std::cout << '\n';
+		);
 
-    req(test_eq.empty());
+		tt_wrap("operator = 0",
+			req(test_eq.empty());
 
-    test_eq = redblack;
-    req(!test_eq.empty());
-    req(test_eq.size() == redblack.size());
+			test_eq = redblack;
+			req(!test_eq.empty());
+			req(test_eq.size() == redblack.size());
+		);
 
+		tt_wrap("rbtree - clear",
+			redblack.clear();
+			req(redblack.empty());
+		);
+
+		tt_wrap("print test_eq",
+			for (auto& itr : test_eq) {
+				std::cout << itr << ", ";
+			}
+			std::cout << '\n';
+		);
+	);
+
+	iz::rbtree<int_str> test;
+
+	test.insert({ 3,  "child" });
+	test.insert({ 21, "bchild" });
+	test.insert({ 4, "ahild" });
+
+	for (auto& itr : test) {
+		std::cout << itr.str << '(' << itr.x << ") ";
+	}
+	std::cout << '\n';
 
 	return 0;
 }
