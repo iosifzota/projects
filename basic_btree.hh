@@ -231,6 +231,9 @@ namespace iz {
 			current = fringe.top();
 			fringe.pop();
 
+            req(current != nullptr);
+            req(current != NIL);
+
 			*current = *other_node;
 
             /* FOR { child of =other_node= | child is !NIL} => current gets a child. */

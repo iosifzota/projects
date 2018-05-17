@@ -110,7 +110,14 @@ int main()
             req(redblack.empty());
         );
     );
-	
+
+    iz::rbtree<int> test_eq;
+
+    req(test_eq.empty());
+
+    test_eq = redblack;
+    req(!test_eq.empty());
+    req(test_eq.size() == redblack.size());
 
 
 	return 0;
