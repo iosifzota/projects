@@ -239,7 +239,7 @@ namespace iz {
 			*current = *other_node;
 			current->parent = backup_parent;
 
-            /* 
+            /*
 			 * FOR_EACH { child of =other_node= | child is !NIL} => current gets a child.
 			 */
             if (other_node->right != NIL) {

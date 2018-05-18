@@ -127,6 +127,17 @@ int main()
 			test_eq = redblack;
 			req(!test_eq.empty());
 			req(test_eq.size() == redblack.size());
+
+            auto redblack_itr = redblack.begin();
+            auto test_eq_itr = test_eq.begin();
+            for (;
+                redblack_itr != redblack.end() && test_eq_itr != test_eq.end();
+                ++redblack_itr, ++test_eq_itr
+                )
+            {
+                req(*redblack_itr == *test_eq_itr);
+            }
+
 		);
 
 		tt_wrap("rbtree - clear",
