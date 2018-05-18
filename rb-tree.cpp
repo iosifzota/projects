@@ -1,10 +1,12 @@
 #include <iostream>
 #include <sstream>
+#include <vector>
 
 #include "rbtree.hh"
 #include "req.hh"
 
 #include "utils.hh"
+
 
 int test();
 
@@ -57,6 +59,27 @@ int test()
 	for (auto itr : x) {
 		std::cout << itr << ' ';
 	}
+	std::cout << "\n\n";
+
+	x.print_tree(4);
+
+	std::cout << "\n\n\n";
+	
+
+
+
+	std::vector<int> test_vec{ 9, 5, 12, 10, 2, 3, 8, 11, 20, 6 };
+	iz::rbtree<int> rbtree_cstr_test;
+	 
+	req(rbtree_cstr_test.empty());
+	req(!test_vec.empty());
+
+	rbtree_cstr_test.construct(&test_vec[0], &test_vec[test_vec.size() - 1] + 1);
+	req(!rbtree_cstr_test.empty());
+
+	for (auto itr : rbtree_cstr_test) {
+			std::cout << itr << ' ';
+		}
 	std::cout << '\n';
 
 /*

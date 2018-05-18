@@ -8,7 +8,7 @@
 #include <functional>
 #include <type_traits>
 
-/* temp */
+/* delete_me */
 #include <iostream>
 
 #include "rbtree.hh"

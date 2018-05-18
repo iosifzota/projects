@@ -48,11 +48,6 @@ int main()
 
 	);
 
-    for (auto itr : mapy) {
-        std::cout << itr.first << ' ';
-    }
-
-
 	test_wrap("range_loop",
 		for (auto itr : mapy) {
 			std::cout << itr.first << ' ';
@@ -89,11 +84,6 @@ int main()
         req(!mapy.empty());
 	);
 
-    test_wrap("map clear()",
-        mapy.clear();
-        req(mapy.empty());
-    );
-
 	iz::rbtree<int> test_eq;
 	iz::rbtree<int> redblack;
 	test_wrap("rbtree - insert, size, itr, empty",
@@ -115,10 +105,15 @@ int main()
 		req(!redblack.empty());
 
 		tt_wrap("Preorder",
-			redblack.preorder_map([](iz::shared_rb_node<int> node) {
-				std::cout << node->data << ' ';
-			});
-			std::cout << '\n';
+			redblack.print_tree(1);
+		);
+
+		tt_wrap("Inorder",
+			redblack.print_tree(2);
+		);
+
+		tt_wrap("Endorder",
+			redblack.print_tree(3);
 		);
 
 		tt_wrap("operator = 0",
@@ -128,15 +123,17 @@ int main()
 			req(!test_eq.empty());
 			req(test_eq.size() == redblack.size());
 
-            auto redblack_itr = redblack.begin();
-            auto test_eq_itr = test_eq.begin();
-            for (;
-                redblack_itr != redblack.end() && test_eq_itr != test_eq.end();
-                ++redblack_itr, ++test_eq_itr
-                )
-            {
-                req(*redblack_itr == *test_eq_itr);
-            }
+			{
+				auto redblack_itr = redblack.begin();
+				auto test_eq_itr = test_eq.begin();
+				for (;
+					redblack_itr != redblack.end() && test_eq_itr != test_eq.end();
+					++redblack_itr, ++test_eq_itr
+					)
+				{
+					req(*redblack_itr == *test_eq_itr);
+				}
+			}
 
 		);
 

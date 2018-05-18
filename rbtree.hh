@@ -1,9 +1,6 @@
 #ifndef __rbtree_hh
 #define __rbtree_hh
 
-// TODO: postorder
-// TODO: print_tree(enum print_tree_option { ERR, preorder, inorder, postorder } )
-
 #include <iostream>
 
 #include "basic_btree.hh"
@@ -63,6 +60,8 @@ namespace iz {
         static void rotate_metadata_fix(const shared_rb_node<T>&, const shared_rb_node<T>&);
         static void upwards_branch_metadata_refresh(shared_rb_node<T>);
 
+		void construct(T*, T*);
+
 		T& insert(const T&);
 		T& insert_unique(const T&);
 		shared_rb_node<T> extract(shared_rb_node<T>);
@@ -76,6 +75,18 @@ namespace iz {
 		using basic_btree<T, RB_Node<T>, Less>::preorder_map;
 		using basic_btree<T, RB_Node<T>, Less>::operator=;
 	};
+
+	template <typename T, typename Less>
+	void rbtree<T, Less>::construct(T* begin, T* end)
+	{
+		req(begin != nullptr);
+		req(end != nullptr);
+		req(begin <= end);
+
+		for (T* itr = begin; itr != end; ++itr) {
+			insert(*itr);
+		}
+	}
 
 
     /* Called only by =insert_unique()=. */

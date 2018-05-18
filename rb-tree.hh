@@ -2,21 +2,20 @@
 #define __rb_tree_hh
 
 
-	generic (T, Less)
-	void rb_tree<T, Less>::print_levels(std::ostream& out) const
+	template <typename T, typename Less>
+	void rbtree<T, Less>::print_levels(std::ostream& out) const
 	{
+		std::queue< pair<shared_rb_node<T>, unsigned> > fringe;
 		shared_rb_node<T> current_node, temp;
 		unsigned prev_level, current_level;
-		std::queue< pair<shared_rb_node<T>, unsigned> > fringe;
 
 		req(root != nullptr);
 		if (root == NIL) {
 			return;
 		}
 
-		fringe.push({ root, 0 });
-
 		prev_level = 0;
+		fringe.push({ root, 0 });
 
 		while (!fringe.empty()) {
 			current_node = fringe.front().key;
@@ -33,7 +32,7 @@
 				prev_level = current_level;
 				out << '\n';
 				 
-				/* Left padding. */
+				/* Left margin. */
 				for (unsigned tabs = 0; tabs < current_level % 50; ++tabs) {
 					out << ' ';
 				}

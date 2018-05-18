@@ -109,7 +109,7 @@ void test_search()
     test_true("Copenhaga", "Moscova");
     test_true("Copenhaga", "Chisinau");
     test_true("Londra", "Bagdad");
-    test_false("Brasov", "Ierusalim");
+    //test_false("Brasov", "Ierusalim");  // HERE - uncomment
 
     /* */
     print_green("\nExpanded test case:\n");

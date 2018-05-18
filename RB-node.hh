@@ -87,7 +87,7 @@ namespace iz {
 	template <typename T>
 	const RB_Node<T>& RB_Node<T>::operator = (const RB_Node& other)
 	{
-		req(other.init);
+		//req(other.init);
 
 		init	= other.init;
 		data	= other.data;
@@ -110,7 +110,10 @@ namespace iz {
         size    { 0 },
 		init	{ false }
 	{
-		memset(&data, 0, sizeof(data));
+		//memset(&data, 0, sizeof(data));
+		T temp{};
+
+		data = temp;
 	}
 
 	template<typename T>
@@ -123,7 +126,10 @@ namespace iz {
         size    { 0 },
 		init	{ false }
 	{
-		memset(&data, 0, sizeof(data));
+		//memset(&data, 0, sizeof(data));
+		T temp{};
+
+		data = temp;
 	}
 
 	template<typename T>
@@ -185,7 +191,10 @@ namespace iz {
 		size{ 0 },
 		init{ false }
 	{
-		memset(&data, 0, sizeof(data));
+		//memset(&data, 0, sizeof(data));
+		T temp{};
+
+		data = temp;
 	}
 
 	template<typename T>
@@ -213,7 +222,7 @@ namespace iz {
 	}
 
 
-    /* temp */
+    /* HERE - does not belong here ... ostream << std::pair  ... */
     template <typename Key, typename Val>
     std::ostream& operator << (std::ostream& out, const std::pair<Key, Val>& data)
     {

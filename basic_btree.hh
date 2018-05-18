@@ -1,15 +1,21 @@
 #ifndef __tree_hh
 #define __tree_hh
 
-// TODO: More hooks vs augmenting base_btree
+// TODO: postorder
+// TODO: print_tree(enum print_tree_option { ERR, preorder, inorder, postorder } )
+
+// WAIT: More hooks vs augmenting base_btree
+
 
 #include <utility>
 #include <memory>
 #include <functional>
 #include <stack>
+#include <queue>
 
-/*temp */
+/* delete_me */
 #include <iostream>
+#include <iomanip>
 
 #include "req.hh"
 
@@ -57,6 +63,8 @@ namespace iz {
 
 			/* Map functions. */
 			static void static_preorder_map(shared<T_Node>, std::function<void(const shared<T_Node>&)>);
+			static void static_inorder_map(shared<T_Node>, std::function<void(const shared<T_Node>&)>);
+			static void static_endorder_map(shared<T_Node>, std::function<void(const shared<T_Node>&)>);
 
             void left_rotate(shared<T_Node>,
                     std::function<void(shared<T_Node> downlifted, shared<T_Node> uplifted)> post_hook);
@@ -110,11 +118,34 @@ namespace iz {
             shared<T_Node> search(const T&) const;
 
 			void preorder_map(std::function<void(const shared<T_Node>&)>);
+			void inorder_map(std::function<void(const shared<T_Node>&)>);
+			void endorder_map(std::function<void(const shared<T_Node>&)>);
+
+			void print_levels(std::ostream& out) const;
+			void print_tree(unsigned short);
+
 			void operator = (basic_btree& other);
 
             /* Interface. */
             virtual T& insert(const T&) = 0;
             virtual shared<T_Node> extract(shared<T_Node>) = 0;
+
+			void pretty_print() {
+				static_pretty_print(root);
+			}
+
+			void static_pretty_print(shared<T_Node> current, int indent = 0) {
+				req(current != nullptr);
+				
+				if (current != NIL) {
+					static_pretty_print(current->right, indent + 10);
+
+					std::cout << '\n' << std::setw(indent) << ' ';
+					std::cout << current->data << '\n';
+
+					static_pretty_print(current->left, indent + 10);
+				}
+			}
     };
 
     template <typename T, typename T_Node, typename Less>
@@ -193,7 +224,7 @@ namespace iz {
         req(temp != nullptr);
         req(temp != NIL);
 
-        std::cout << " {" << temp->size << "} "; // temp
+        std::cout << " {" << temp->size << "} "; // delete_me
 
         return temp->data;
     }
@@ -278,6 +309,94 @@ namespace iz {
         return node;
     }
 
+
+	template <typename T, typename T_Node, typename Less>
+	void basic_btree<T, T_Node, Less>::print_tree(unsigned short option)
+	{
+		switch (option) {
+		case 1:
+			preorder_map([](const shared<T_Node>& node) {
+				std::cout << node->data << "; ";
+			});
+			std::cout << '\n';
+			break;
+
+		case 2:
+			inorder_map([](const shared<T_Node>& node) {
+				std::cout << node->data << "; ";
+			});
+			std::cout << '\n';
+			break;
+
+		case 3:
+			endorder_map([](const shared<T_Node>& node) {
+				std::cout << node->data << "; ";
+			});
+			std::cout << '\n';
+			break;
+
+		case 4:
+			pretty_print();
+			std::cout << '\n';
+			break;
+
+		default:
+			std::cout << "Invalid option.\n";
+			exit(-5);
+		}
+	}
+
+	template <typename T, typename T_Node, typename Less>
+	void basic_btree<T, T_Node, Less>::print_levels(std::ostream& out) const
+	{
+		std::queue< pair<shared_rb_node<T>, unsigned> > fringe;
+		shared_rb_node<T> current_node, temp;
+		unsigned prev_level, current_level;
+
+		req(root != nullptr);
+		if (root == NIL) {
+			return;
+		}
+
+		prev_level = 0;
+		fringe.push({ root, 0 });
+
+		while (!fringe.empty()) {
+			current_node = fringe.front().key;
+			current_level = fringe.front().val;
+
+			req(current_node != nullptr, "[Debug]");
+
+			if (current_node != NIL) {
+				fringe.push({ current_node->left, current_level + 1 });
+				fringe.push({ current_node->right, current_level + 1 });
+			}
+
+			if (prev_level != current_level) {
+				prev_level = current_level;
+				out << '\n';
+
+				/* Left margin. */
+				for (unsigned tabs = 0; tabs < current_level % 50; ++tabs) {
+					out << ' ';
+				}
+			}
+
+			if (current_node != NIL)
+				out << current_node->data << ' ';
+			else
+				out << "  ";
+
+			/* Right padding. */
+			for (unsigned tabs = 0; tabs < current_level % 50; ++tabs) {
+				out << ' ';
+			}
+
+			fringe.pop();
+		}
+	}
+
+
 	template <typename T, typename T_Node, typename Less>
 	void basic_btree<T, T_Node, Less>::preorder_map(std::function<void(const shared<T_Node>&)> action)
 	{
@@ -311,6 +430,74 @@ namespace iz {
 			if (current->left != NIL) {
 				fringe.push(current->left);
 			}
+		}
+	}
+
+	template <typename T, typename T_Node, typename Less>
+	void basic_btree<T, T_Node, Less>::endorder_map(std::function<void(const shared<T_Node>&)> action)
+	{
+		return static_endorder_map(root, action);
+	}
+
+	template <typename T, typename T_Node, typename Less>
+	void basic_btree<T, T_Node, Less>::static_endorder_map(shared<T_Node> begin, std::function<void(const shared<T_Node>&)> action)
+	{
+		std::stack< shared<T_Node> > fringe;
+		shared<T_Node> current;
+
+		req(begin != NIL);
+		fringe.push(begin);
+
+		while (!fringe.empty()) {
+			current = fringe.top();
+			fringe.pop();
+
+			req(current != nullptr);
+
+			if (current == NIL) {
+				req(!fringe.empty());
+
+				current = fringe.top();
+				fringe.pop();
+
+				req(current != nullptr);
+				req(current != NIL);
+
+				action(current);
+			}
+			else {
+				fringe.push(current);
+				fringe.push(NIL);
+				
+				if (current->right != NIL) {
+					fringe.push(current->right);
+				}
+
+				if (current->left != NIL) {
+					fringe.push(current->left);
+				}
+			}
+		}
+	}
+
+	template <typename T, typename T_Node, typename Less>
+	void basic_btree<T, T_Node, Less>::inorder_map(std::function<void(const shared<T_Node>&)> action)
+	{
+		return static_inorder_map(root, action);
+	}
+
+	template <typename T, typename T_Node, typename Less>
+	void basic_btree<T, T_Node, Less>::static_inorder_map(shared<T_Node> begin, std::function<void(const shared<T_Node>&)> action)
+	{
+		req(begin != nullptr);
+
+		for (
+			shared<T_Node> current = min(begin);
+			current != NIL;
+			current = successor(current)
+			)
+		{
+			action(current);
 		}
 	}
 
