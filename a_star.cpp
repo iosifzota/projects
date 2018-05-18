@@ -11,10 +11,6 @@
 #include "utils.hh"
 #include "req.hh"
 #include "priority_queue.hh"
-#include "c_array.hh"
-#include "get_path.hh"
-
-
 
 struct Coordinates {
     double lat, lng;
