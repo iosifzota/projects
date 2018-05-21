@@ -64,13 +64,11 @@ int test()
 	x.print_tree(4);
 
 	std::cout << "\n\n\n";
-	
-
 
 
 	std::vector<int> test_vec{ 9, 5, 12, 10, 2, 3, 8, 11, 20, 6 };
 	iz::rbtree<int> rbtree_cstr_test;
-	 
+
 	req(rbtree_cstr_test.empty());
 	req(!test_vec.empty());
 
@@ -82,10 +80,7 @@ int test()
 		}
 	std::cout << '\n';
 
-/*
-	test_wrap("levels",
-		x.print_levels(std::cout);
-	); */
+
 
  	return 0;
 }

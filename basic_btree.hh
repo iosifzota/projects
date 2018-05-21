@@ -1,8 +1,8 @@
 #ifndef __tree_hh
 #define __tree_hh
 
-// TODO: postorder
-// TODO: print_tree(enum print_tree_option { ERR, preorder, inorder, postorder } )
+// DONE: postorder
+// DONE: print_tree(enum print_tree_option { ERR, preorder, inorder, postorder } )
 
 // WAIT: More hooks vs augmenting base_btree
 
@@ -121,7 +121,6 @@ namespace iz {
 			void inorder_map(std::function<void(const shared<T_Node>&)>);
 			void endorder_map(std::function<void(const shared<T_Node>&)>);
 
-			void print_levels(std::ostream& out) const;
 			void print_tree(unsigned short);
 
 			void operator = (basic_btree& other);
@@ -136,7 +135,7 @@ namespace iz {
 
 			void static_pretty_print(shared<T_Node> current, int indent = 0) {
 				req(current != nullptr);
-				
+
 				if (current != NIL) {
 					static_pretty_print(current->right, indent + 10);
 
@@ -346,56 +345,6 @@ namespace iz {
 		}
 	}
 
-	template <typename T, typename T_Node, typename Less>
-	void basic_btree<T, T_Node, Less>::print_levels(std::ostream& out) const
-	{
-		std::queue< pair<shared_rb_node<T>, unsigned> > fringe;
-		shared_rb_node<T> current_node, temp;
-		unsigned prev_level, current_level;
-
-		req(root != nullptr);
-		if (root == NIL) {
-			return;
-		}
-
-		prev_level = 0;
-		fringe.push({ root, 0 });
-
-		while (!fringe.empty()) {
-			current_node = fringe.front().key;
-			current_level = fringe.front().val;
-
-			req(current_node != nullptr, "[Debug]");
-
-			if (current_node != NIL) {
-				fringe.push({ current_node->left, current_level + 1 });
-				fringe.push({ current_node->right, current_level + 1 });
-			}
-
-			if (prev_level != current_level) {
-				prev_level = current_level;
-				out << '\n';
-
-				/* Left margin. */
-				for (unsigned tabs = 0; tabs < current_level % 50; ++tabs) {
-					out << ' ';
-				}
-			}
-
-			if (current_node != NIL)
-				out << current_node->data << ' ';
-			else
-				out << "  ";
-
-			/* Right padding. */
-			for (unsigned tabs = 0; tabs < current_level % 50; ++tabs) {
-				out << ' ';
-			}
-
-			fringe.pop();
-		}
-	}
-
 
 	template <typename T, typename T_Node, typename Less>
 	void basic_btree<T, T_Node, Less>::preorder_map(std::function<void(const shared<T_Node>&)> action)
@@ -468,7 +417,7 @@ namespace iz {
 			else {
 				fringe.push(current);
 				fringe.push(NIL);
-				
+
 				if (current->right != NIL) {
 					fringe.push(current->right);
 				}
