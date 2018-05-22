@@ -39,6 +39,7 @@ namespace iz {
 
         /* Extra */
         unsigned size;
+        T sum;
 
 		RB_Node();
 
@@ -79,6 +80,42 @@ namespace iz {
 		/* Helper for `<<`. */
 		static inline std::ostream& print_relative(std::ostream&, const shared_rb_node<T>&, const char *);
 
+
+        /* TODO: Move outside */
+        /* Helpers for augumenting. */
+        void update_size() {
+            unsigned new_size{};
+
+            if (left != nullptr) {
+                new_size += left->size;
+            }
+            if (right != nullptr) {
+                new_size += right->size;
+            }
+            new_size += 1;
+
+            size = new_size;
+        }
+
+        void update_sum() {
+            T new_sum{};
+
+            if (left != nullptr) {
+                new_sum += left->sum;
+            }
+            if (right != nullptr) {
+                new_sum += right->sum;
+            }
+            new_sum += data;
+
+            sum = new_sum;
+        }
+
+        void update_metadata() {
+            update_size();
+            update_sum();
+        }
+
 	private:
 		/* Used in `print_data` to avoid printing garbage values. */
 		bool init;
@@ -93,6 +130,7 @@ namespace iz {
 		data	= other.data;
 		color	= other.color;
 		size	= other.size;
+        sum     = other.sum;
 		left	= other.left;
 		right	= other.right;
 		parent	= other.parent;
@@ -110,10 +148,10 @@ namespace iz {
         size    { 0 },
 		init	{ false }
 	{
-		//memset(&data, 0, sizeof(data));
 		T temp{};
 
 		data = temp;
+        sum = temp;
 	}
 
 	template<typename T>
@@ -126,10 +164,10 @@ namespace iz {
         size    { 0 },
 		init	{ false }
 	{
-		//memset(&data, 0, sizeof(data));
 		T temp{};
 
 		data = temp;
+        sum = temp;
 	}
 
 	template<typename T>
@@ -141,6 +179,7 @@ namespace iz {
 		parent	{ nullptr },
 		color	{ RED },
         size    { 1 },
+        sum     { d },
 		init	{ true }
 	{}
 
@@ -153,6 +192,7 @@ namespace iz {
 		right	{ nullptr },
 		color	{ RED },
         size    { 1 },
+        sum     { d },
 		init	{ true }
 	{}
 
@@ -165,6 +205,7 @@ namespace iz {
 		parent	{ nullptr },
 		color	{ RED },
         size    { 1 },
+        sum     { d },
 		init	{ true }
 	{}
 
@@ -177,6 +218,7 @@ namespace iz {
 		parent	{ p },
 		color	{ RED },
         size    { 1 },
+        sum     { d },
 		init	{ true }
 	{}
 
@@ -191,10 +233,10 @@ namespace iz {
 		size{ 0 },
 		init{ false }
 	{
-		//memset(&data, 0, sizeof(data));
 		T temp{};
 
 		data = temp;
+        sum = temp;
 	}
 
 	template<typename T>
@@ -238,7 +280,7 @@ namespace iz {
 			out << "(uninitialized)";
 		}
 		else {
-			out << data << '{' << size << '}' << "\t\t";
+			out << data << '{' << size << ", " << sum << '}' << "\t\t";
 		}
 
 		out << "\t\t\t\t\t::";

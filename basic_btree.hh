@@ -12,6 +12,7 @@
 #include <functional>
 #include <stack>
 #include <queue>
+#include <string>
 
 /* delete_me */
 #include <iostream>
@@ -56,6 +57,7 @@ namespace iz {
             static Not_Equal not_equal;
 
             static shared<T_Node> static_search(const T&, const shared<T_Node>&);
+            static shared<T_Node> static_search_interval_intersection(const T&, const T&, const shared<T_Node>&);
             static shared<T_Node> successor(shared<T_Node>);
             static shared<T_Node> predecessor(shared<T_Node>);
             static shared<T_Node> min(shared<T_Node>);
@@ -116,6 +118,7 @@ namespace iz {
             inline void clear();
             inline bool empty() const;
             shared<T_Node> search(const T&) const;
+            shared<T_Node> search_interval_intersection(const T&, const T&) const;
 
 			void preorder_map(std::function<void(const shared<T_Node>&)>);
 			void inorder_map(std::function<void(const shared<T_Node>&)>);
@@ -129,6 +132,9 @@ namespace iz {
             virtual T& insert(const T&) = 0;
             virtual shared<T_Node> extract(shared<T_Node>) = 0;
 
+
+
+            /* TODO: Move outside */
 			void pretty_print() {
 				static_pretty_print(root);
 			}
@@ -223,7 +229,7 @@ namespace iz {
         req(temp != nullptr);
         req(temp != NIL);
 
-        std::cout << " {" << temp->size << "} "; // delete_me
+        std::cout << " {" << temp->size << ", " << temp->sum << "} "; // delete_me
 
         return temp->data;
     }
@@ -449,6 +455,46 @@ namespace iz {
 			action(current);
 		}
 	}
+
+
+    template <typename T, typename T_Node, typename Less>
+    shared<T_Node> basic_btree<T, T_Node, Less>::search_interval_intersection(const T& keyA, const T& keyB) const
+    {
+        static_search_interval_intersection(keyA, keyB, root);
+    }
+
+    template <typename T, typename T_Node, typename Less>
+    shared<T_Node>
+    basic_btree<T, T_Node, Less>::static_search_interval_intersection(
+            const T& keyA, const T& keyB, const shared<T_Node>& begin
+            )
+    {
+        req(begin != nullptr);
+
+        shared<T_Node> node(begin);
+        T lower_key, heigher_key;
+
+        lower_key = std::min(lower_key, heigher_key);
+        heigher_key = std::max(lower_key, heigher_key);
+
+        while (
+                node != NIL &&
+                    (
+                     less(node->data, lower_key) || // HERE
+                     greater(node->data, heigher_key)
+                    )
+                )
+        {
+            if (less(heigher_key, node->data)) {
+                node = node->left;
+            }
+            else {
+                node = node->right;
+            }
+        }
+
+        return node;
+    }
 
     /* Search tree of root =begin=. */
     template <typename T, typename T_Node, typename Less>
