@@ -24,6 +24,8 @@ add_executable(arr c_array.cpp req.cpp)
 add_executable(btrees basic_btree.hh RB-node.hh rbtree.hh map.hh binary_trees.cpp req.hh req.cpp)
 add_executable(redblack basic_btree.hh RB-node.hh rbtree.hh req.hh req.cpp rb-tree.cpp)
 
+add_executable(hash hash_table.cpp hash_table.hh req.cpp)
+
 # add_executable(mat
 #     matrix.cpp
 #     req.cpp)
@@ -51,6 +53,7 @@ add_executable(huff huffman.cpp freq.cpp req.cpp)
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL GNU OR
 	${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
 	target_link_libraries(a_star m)
+	target_link_libraries(hash m)
 endif()
 
 # add_executable(vec
