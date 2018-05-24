@@ -17,7 +17,11 @@ methods:
 
 iterator:
     nonconst_bidirectional_iterator
-    // def: iterator until gobal end; mark bucket end diff from global end or have a seperate bucket iterator
+    // def: iterator until gobal end; seperate bucket iterator
+
+
+	TODO: iterator find(key);
+	 ...
 
    */
 
@@ -101,10 +105,8 @@ namespace iz {
                 }
             }
 
-            /* HERE */
             iterator& operator ++ () {
                 req(init);
-                req(current_bucket != buckets_end); // delete_me
 
                 if (current_bucket == buckets_end) {
                     return *this;
@@ -123,7 +125,6 @@ namespace iz {
                         )
                     { ; }
 
-                    std::cout << "HERE\n\n";
                     if (current_bucket != buckets_end) {
                         current_item = (*current_bucket).begin();
                     }
@@ -175,11 +176,13 @@ namespace iz {
             iterator itr(data.end(), data.end());
             return itr;
         }
-
+		/* end iterator */
 
         htable(unsigned init_size = HTABLE_INIT_SIZE);
 
-        Val& insert(const Key&, const Val&);
+        Val& insert(const Key&, const Val&, bool rewrite = true);
+		Val& operator [] (const Key&);
+
         void remove(const Key&);
 
         unsigned load() const;
@@ -220,7 +223,7 @@ namespace iz {
 
     /* */
     template <typename Key, typename Val, typename Hash>
-    Val& htable<Key, Val, Hash>::insert(const Key& key, const Val& val)
+    Val& htable<Key, Val, Hash>::insert(const Key& key, const Val& val, bool rewrite)
     {
         print_green("Insert...\n");
         size_t key_hash;
@@ -230,7 +233,9 @@ namespace iz {
 
         for (auto& item : data[key_hash]) {
             if (item.first == key) {
-                item.second = val;
+				if (rewrite) {
+					item.second = val;
+				}
 
                 return item.second;
             }
@@ -247,6 +252,14 @@ namespace iz {
 
         return data[key_hash].front().second;
     }
+
+	template <typename Key, typename Val, typename Hash>
+	Val& htable<Key, Val, Hash>::operator [] (const Key& key)
+	{
+		Val null_val{};
+
+		return insert(key, null_val, false);
+	}
 
     /* */
     template <typename Key, typename Val, typename Hash>
@@ -353,9 +366,9 @@ namespace iz {
     template <typename Key, typename Val, typename Hash>
     std::ostream& operator << (std::ostream& out, htable<Key, Val, Hash> ht)
     {
-        ht.map([&](ht_item<Key, Val>& item) {
-            out << "( " << item.first << ", " << item.second << " )\n";
-        });
+		for (const auto& item : ht) {
+			out << "( " << item.first << ", " << item.second << " )\n";
+		}
 
         return out;
     }
