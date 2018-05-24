@@ -223,8 +223,6 @@ namespace iz {
         req(temp != nullptr);
         req(temp != NIL);
 
-        std::cout << " {" << temp->size << "} "; // delete_me
-
         return temp->data;
     }
 
@@ -315,21 +313,21 @@ namespace iz {
 		switch (option) {
 		case 1:
 			preorder_map([](const shared<T_Node>& node) {
-				std::cout << node->data << "; ";
+				std::cout << node << ", ";
 			});
 			std::cout << '\n';
 			break;
 
 		case 2:
 			inorder_map([](const shared<T_Node>& node) {
-				std::cout << node->data << "; ";
+				std::cout << node << ", ";
 			});
 			std::cout << '\n';
 			break;
 
 		case 3:
 			endorder_map([](const shared<T_Node>& node) {
-				std::cout << node->data << "; ";
+				std::cout << node << ", ";
 			});
 			std::cout << '\n';
 			break;

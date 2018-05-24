@@ -123,6 +123,7 @@ int main()
 			req(!test_eq.empty());
 			req(test_eq.size() == redblack.size());
 
+			/* check test_eq == redblack */
 			{
 				auto redblack_itr = redblack.begin();
 				auto test_eq_itr = test_eq.begin();

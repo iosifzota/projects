@@ -208,9 +208,9 @@ namespace iz {
 	{
 		n.print_data(out, "Node");
 
-		RB_Node<T>::print_relative(out, n.parent, "Parent");
-		RB_Node<T>::print_relative(out, n.left, "Left");
-		RB_Node<T>::print_relative(out, n.right, "Right");
+		//RB_Node<T>::print_relative(out, n.parent, "Parent");
+		//RB_Node<T>::print_relative(out, n.left, "Left");
+		//RB_Node<T>::print_relative(out, n.right, "Right");
 
 		return out;
 	}
@@ -232,25 +232,29 @@ namespace iz {
 	template<typename T>
 	std::ostream& RB_Node<T>::print_data(std::ostream& out, const char *node_str) const
 	{
-		out << node_str << ": ";
+		//out << node_str << ": ";
 
 		if (!init) {
 			out << "(uninitialized)";
 		}
 		else {
-			out << data << '{' << size << '}' << "\t\t";
+			//out << data << '{' << size << '}';
+			out << data;
 		}
 
-		out << "\t\t\t\t\t::";
+		//out << "\t\t\t\t\t::";
 
 		if (color == BLACK) {
-			out << "BLACK";
+			//out << "BLACK";
+			out << "::B";
 		}
 		else {
-			out << "RED";
+			//out << "RED";
+			out << "::R";
 		}
 
-		return out << '\n';
+		//return out << '\n';
+		return out;
 	}
 
 	template<typename T>
