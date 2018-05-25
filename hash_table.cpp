@@ -41,10 +41,18 @@ int main()
 	);
 
 	test_wrap("operator[]",
-		std::cout << "\tBefore: " << test["Messi"] << '\n';
-		test["Messi"] = 10;
-		std::cout << "\tAfter: " <<  test["Messi"] << '\n';
+		std::cout << "\tBefore: " << test["Joni"] << '\n';
+		test["Joni"] = 10;
+		std::cout << "\tAfter: " <<  test["Joni"] << '\n';
 	);
+
+	req( "Joni" == (*test.static_search(test.data, "Joni")).first );
+
+	req( "Joni" == (*(test.find("Joni"))).first );
+
+	for (auto itr = test.find("Joni"); itr != test.end(); ++itr) {
+		std::cout << (*itr).first << " : " << (*itr).second << '\n';
+	}
 
     return 0;
 }

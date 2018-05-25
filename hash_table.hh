@@ -23,6 +23,7 @@ iterator:
 	TODO: iterator find(key);
 	 ...
 
+	... Change to open addressing.
    */
 
 #include <utility>
@@ -116,7 +117,7 @@ namespace iz {
 
                 ++current_item;
 
-                /* If current_bucketend() is reached, get next bucket. */
+                /* If (*current_bucket).end() is reached, get next bucket. */
                 if (current_item == (*current_bucket).end()) {
                     for (
                             ++current_bucket;
@@ -166,7 +167,26 @@ namespace iz {
                 return !(*this == other);
             }
 
+			iterator& find(const Key& key) {
+				req(init);
+
+				while (current_bucket != buckets_end) {
+					if (key == (*current_item).first) {
+						break;
+					}
+					++(*this);
+				}
+
+				return *this;
+			}
+
         };
+
+		iterator find(const Key& key) {
+			iterator itr(data.begin(), data.end());
+			itr.find(key);
+			return itr;
+		}
 
         iterator begin() {
             iterator itr(data.begin(), data.end());
@@ -180,19 +200,21 @@ namespace iz {
 
         htable(unsigned init_size = HTABLE_INIT_SIZE);
 
+		static ht_item<Key, Val>* static_search(buckets_vector<Key, Val>& data, const Key&);
+
         Val& insert(const Key&, const Val&, bool rewrite = true);
 		Val& operator [] (const Key&);
 
         void remove(const Key&);
 
-        unsigned load() const;
-
         void resize(unsigned);
         void resize_up();
         void resize_down();
 
+        unsigned load() const;
+
         static Hash hash;
-        buckets_vector<Key, Val> data;
+		buckets_vector<Key, Val> data;
 
         void map(std::function<void(ht_item<Key, Val>&)>);
     private:
@@ -325,6 +347,25 @@ namespace iz {
     {
         resize(base_size / 2);
     }
+
+	/* */
+	template <typename Key, typename Val, typename Hash>
+	ht_item<Key, Val>* htable<Key, Val, Hash>::static_search(buckets_vector<Key, Val>& data, const Key& key)
+	{
+		print_green("Search...\n");
+		size_t key_hash;
+
+		key_hash = hash(key) % data.size();
+		print_hashed(key, data.size());
+
+		for (auto& item : data[key_hash]) {
+			if (item.first == key) {
+				return &item;	// &ref == &referred
+			}
+		}
+		return nullptr;
+	}
+
 
     /* Helper - Used only by resize. */
     template <typename Key, typename Val>
