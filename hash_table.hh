@@ -20,7 +20,7 @@ iterator:
     // def: iterator until gobal end; seperate bucket iterator
 
 
-	TODO: iterator find(key);
+	DONE: iterator find(key);
 	 ...
 
 	... Change to open addressing.

@@ -14,7 +14,7 @@ int main()
 		test.insert("Ronaldo", 7);
 		test.insert("Pele", 3);
 		test.insert("Rooney", 9);
-		
+
 		std::cout << test;
 	);
 
@@ -35,7 +35,7 @@ int main()
 		for (auto& itr : test) {
 			itr.second = 0;
 		}
-		
+
 		print_green("After:\n");
 		std::cout << test << '\n';
 	);
@@ -46,13 +46,14 @@ int main()
 		std::cout << "\tAfter: " <<  test["Joni"] << '\n';
 	);
 
-	req( "Joni" == (*test.static_search(test.data, "Joni")).first );
+    test_wrap("find...",
+        req( "Joni" == (*test.static_search(test.data, "Joni")).first );
+        req( "Joni" == (*(test.find("Joni"))).first );
 
-	req( "Joni" == (*(test.find("Joni"))).first );
-
-	for (auto itr = test.find("Joni"); itr != test.end(); ++itr) {
-		std::cout << (*itr).first << " : " << (*itr).second << '\n';
-	}
+        for (auto itr = test.find("Joni"); itr != test.end(); ++itr) {
+            std::cout << (*itr).first << " : " << (*itr).second << '\n';
+        }
+    );
 
     return 0;
 }
