@@ -7,6 +7,10 @@
 
 #include "req.hh"
 
+/*
+TODO: remove memset
+   */
+
 namespace iz {
 	enum RB_color {
 		RED,
@@ -103,34 +107,26 @@ namespace iz {
 	template<typename T>
 	RB_Node<T>::RB_Node()
 		:
+        data    {},
 		left	{ nullptr },
 		right	{ nullptr },
 		parent	{ nullptr },
 		color	{ RED },
         size    { 0 },
 		init	{ false }
-	{
-		//memset(&data, 0, sizeof(data));
-		T temp{};
-
-		data = temp;
-	}
+	{ }
 
 	template<typename T>
 	RB_Node<T>::RB_Node(RB_color c)
 		:
+        data    {},
 		left	{ nullptr },
 		right	{ nullptr },
 		parent	{ nullptr },
 		color	{ c },
         size    { 0 },
 		init	{ false }
-	{
-		//memset(&data, 0, sizeof(data));
-		T temp{};
-
-		data = temp;
-	}
+	{ }
 
 	template<typename T>
 	RB_Node<T>::RB_Node(const T& d)
@@ -142,7 +138,7 @@ namespace iz {
 		color	{ RED },
         size    { 1 },
 		init	{ true }
-	{}
+	{ }
 
 	template<typename T>
 	RB_Node<T>::RB_Node(const T& d, const shared_rb_node<T>& p)
@@ -154,7 +150,7 @@ namespace iz {
 		color	{ RED },
         size    { 1 },
 		init	{ true }
-	{}
+	{ }
 
 	template<typename T>
 	RB_Node<T>::RB_Node(const T& d, const shared_rb_node <T>& l, const shared_rb_node<T>& r)
@@ -166,7 +162,7 @@ namespace iz {
 		color	{ RED },
         size    { 1 },
 		init	{ true }
-	{}
+	{ }
 
 	template<typename T>
 	RB_Node<T>::RB_Node(const T& d, const shared_rb_node<T>& l, const shared_rb_node<T>& r, const shared_rb_node<T>& p)
@@ -178,24 +174,20 @@ namespace iz {
 		color	{ RED },
         size    { 1 },
 		init	{ true }
-	{}
+	{ }
 
 
 	template<typename T>
 	RB_Node<T>::RB_Node(const shared_rb_node<T>& l, const shared_rb_node<T>& r, const shared_rb_node<T>& p)
 		:
+        data{},
 		left{ l },
 		right{ r },
 		parent{ p },
 		color{ RED },
 		size{ 0 },
 		init{ false }
-	{
-		//memset(&data, 0, sizeof(data));
-		T temp{};
-
-		data = temp;
-	}
+	{ }
 
 	template<typename T>
 	RB_Node<T>::~RB_Node()
@@ -230,7 +222,7 @@ namespace iz {
     }
 
 	template<typename T>
-	std::ostream& RB_Node<T>::print_data(std::ostream& out, const char *node_str) const
+	std::ostream& RB_Node<T>::print_data(std::ostream& out, const char *) const
 	{
 		//out << node_str << ": ";
 

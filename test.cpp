@@ -1,19 +1,9 @@
-#include <stdio.h>
-#include "req.hh"
-
-#include "utils.hh"
-#include "generic.hh"
-
-generic(N)
-void test(N x) {
-	printf("%d\n", sizeof(N));
-}
-
+#include <iostream>
 
 int main()
 {
-	test(1);
-    req(0, "1");
-    req(0);
+    const int x;
+
+    x = 3;
     return 0;
 }

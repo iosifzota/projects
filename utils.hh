@@ -87,28 +87,31 @@ namespace iz {
 			st.pop();
 	}
 
-	template <typename TKey, typename TVal>
+	template <typename T1, typename T2>
 	struct pair {
-		TKey key;
-		TVal val;
+		T1 first;
+		T2 second;
 
 		pair() {};
 
-		pair(const TKey& __key, const TVal& __val) {
-			key = __key;
-			val = __val;
-		}
+		pair(const T1& __first, const T2& __second)
+			: first{ __first }, second{ __second } {}
 
  		pair(const pair& other) {
-			key = other.key;
-			val = other.val;
+			first = other.first;
+			second = other.second;
 		}
-		 
+
 		const pair& operator = (const pair& other) {
-			key = other.key;
-			val = other.val;
+			first = other.first;
+			second = other.second;
 		}
 	};
+
+    template <typename T1, typename T2>
+    std::ostream& operator << (std::ostream& out, const pair<T1, T2>& p) {
+        return out << p.first << ", " << p.second;
+    }
 }
 
 
