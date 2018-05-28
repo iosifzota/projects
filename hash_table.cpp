@@ -29,7 +29,7 @@ void test_hash()
 {
 	std::ifstream input(INPUT_FILE);
 	std::string word;
-    iz::htable<std::string, int> test(100000U);
+    iz::htable<std::string, int> test(15000U);
 
 	req(input.good(), "Error opening file: " INPUT_FILE);
 
@@ -43,6 +43,7 @@ void test_hash()
 
 	std::cout << test << '\n';
 	std::cout << "Number of collisions: " << test.collision_count() << '\n';
+	std::cout << "Load: " << test.load();
 
 	input.close();
 }

@@ -169,7 +169,6 @@ namespace iz {
 			iterator itr(data.end(), data.end());
 			return itr;
 		}
-		/* end iterator */
     };
 
 	template <typename Key, typename Val, typename Hash>
