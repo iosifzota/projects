@@ -2,14 +2,14 @@
 #define __hash_table_hh
 
 /*
-   hash< Key, Val, Hash >
-container:
-    std::vector< std::list<Val> >;
+  hash< Key, Val, Hash >
+  container:
+  std::vector< std::list<Val> >;
 
-[WAIT] methods:
-    delete_objs_also(Key)
-    delete_arrays_also(Key)
-   */
+  [WAIT] methods:
+  delete_objs_also(Key)
+  delete_arrays_also(Key)
+*/
 
 #include <utility>
 #include <memory>
@@ -31,59 +31,59 @@ int next_prime(int);
 
 namespace iz {
 
-    template <typename Key, typename Hash = std::hash<Key> >
-    void print_hashed(const Key& key, unsigned size);
+        template <typename Key, typename Hash = std::hash<Key> >
+        void print_hashed(const Key& key, unsigned size);
 
 	/* Aliases */
-    template <typename Key, typename Val>
-    using ht_item = std::pair<const Key, Val>;
+        template <typename Key, typename Val>
+        using ht_item = std::pair<const Key, Val>;
 
-    template <typename Key, typename Val>
-    using bucket = std::list< ht_item<Key, Val> >;
+        template <typename Key, typename Val>
+        using bucket = std::list< ht_item<Key, Val> >;
 
-    template <typename Key, typename Val>
-    using buckets_vector = std::vector< bucket<Key, Val> >;
+        template <typename Key, typename Val>
+        using buckets_vector = std::vector< bucket<Key, Val> >;
 
 	/* bucketcpy(dest, src) */
-    template <typename Key, typename Val>
-    const buckets_vector<Key, Val>&
-    bucketcpy (buckets_vector<Key, Val>&, const buckets_vector<Key, Val>&);
+        template <typename Key, typename Val>
+        const buckets_vector<Key, Val>&
+        bucketcpy (buckets_vector<Key, Val>&, const buckets_vector<Key, Val>&);
 
 
-    template <typename Key, typename Val, typename Hash>
-    class htable;
+        template <typename Key, typename Val, typename Hash>
+        class htable;
 
-    template <typename Key, typename Val, typename Hash>
-    std::ostream& operator << (std::ostream&, htable<Key, Val, Hash>);
+        template <typename Key, typename Val, typename Hash>
+        std::ostream& operator << (std::ostream&, htable<Key, Val, Hash>);
 
-    template <typename Key, typename Val, typename Hash = std::hash<Key> >
-    class htable
-    {
+        template <typename Key, typename Val, typename Hash = std::hash<Key> >
+        class htable
+        {
 	private:
 		unsigned size;
 		unsigned base_size;
 		unsigned __collision_count;
 		unsigned __count;
 
-    public:
+        public:
 		static Hash hash;
 		buckets_vector<Key, Val> data;
 
-        htable(unsigned init_size = HTABLE_INIT_SIZE);
+                htable(unsigned init_size = HTABLE_INIT_SIZE);
 
-        Val& insert(const Key&, const Val&, bool rewrite = true);
+                Val& insert(const Key&, const Val&, bool rewrite = true);
 		Val& operator [] (const Key&);
 
-        void remove(const Key&);
+                void remove(const Key&);
 
-        void resize(unsigned);
-        void resize_up();
-        void resize_down();
+                void resize(unsigned);
+                void resize_up();
+                void resize_down();
 
 		static ht_item<Key, Val>* static_search(buckets_vector<Key, Val>& data, const Key&);
-        void map(std::function<void(ht_item<Key, Val>&)>);
+                void map(std::function<void(ht_item<Key, Val>&)>);
 
-        unsigned load() const;
+                unsigned load() const;
 		unsigned count() const;
 
 		/* Collision stats */
@@ -105,7 +105,7 @@ namespace iz {
 				typename buckets_vector<Key, Val>::iterator begin,
 				typename buckets_vector<Key, Val>::iterator end,
 				const Key& key
-			);
+                                );
 
 			bool reached_end() const;
 
@@ -118,8 +118,8 @@ namespace iz {
 			ht_item<Key, Val>& operator * ();
 
 			bucket_iterator& find(  typename buckets_vector<Key, Val>::iterator begin,
-									typename buckets_vector<Key, Val>::iterator end,
-									const Key& key );
+                                                typename buckets_vector<Key, Val>::iterator end,
+                                                const Key& key );
 		};
 
 		class iterator
@@ -135,7 +135,7 @@ namespace iz {
 			iterator();
 
 			iterator(typename buckets_vector<Key, Val>::iterator begin,
-				typename buckets_vector<Key, Val>::iterator end);
+                                 typename buckets_vector<Key, Val>::iterator end);
 
 			iterator& operator ++ ();
 			iterator  operator ++ (int);
@@ -169,7 +169,7 @@ namespace iz {
 			iterator itr(data.end(), data.end());
 			return itr;
 		}
-    };
+        };
 
 	template <typename Key, typename Val, typename Hash>
 	unsigned htable<Key, Val, Hash>::count() const
@@ -189,64 +189,64 @@ namespace iz {
 		__collision_count = 0;
 	}
 
-    template <typename Key, typename Val, typename Hash>
-    Hash htable<Key, Val, Hash>::hash;
+        template <typename Key, typename Val, typename Hash>
+        Hash htable<Key, Val, Hash>::hash;
 
-    template <typename Key, typename Val, typename Hash>
-    htable<Key, Val, Hash>::htable(unsigned init_size)
-    {
+        template <typename Key, typename Val, typename Hash>
+        htable<Key, Val, Hash>::htable(unsigned init_size)
+        {
 		__collision_count = 0;
 
-        if (init_size < HTABLE_INIT_SIZE) {
-            base_size = HTABLE_INIT_SIZE;
+                if (init_size < HTABLE_INIT_SIZE) {
+                        base_size = HTABLE_INIT_SIZE;
+                }
+                else {
+                        base_size = init_size;
+                }
+
+                size = next_prime(base_size);
+                data.resize(size);
+
+                __count = 0;
         }
-        else {
-            base_size = init_size;
-        }
 
-        size = next_prime(base_size);
-        data.resize(size);
+        /* */
+        template <typename Key, typename Val, typename Hash>
+        Val& htable<Key, Val, Hash>::insert(const Key& key, const Val& val, bool rewrite)
+        {
+                //print_green("Insert...\n");
+                size_t key_hash;
 
-        __count = 0;
-    }
+                key_hash = hash(key) % size;
+                // print_hashed(key, size);
 
-    /* */
-    template <typename Key, typename Val, typename Hash>
-    Val& htable<Key, Val, Hash>::insert(const Key& key, const Val& val, bool rewrite)
-    {
-        //print_green("Insert...\n");
-        size_t key_hash;
-
-        key_hash = hash(key) % size;
-        // print_hashed(key, size);
-
-        for (auto& item : data[key_hash]) {
-            if (item.first == key) {
+                for (auto& item : data[key_hash]) {
+                        if (item.first == key) {
 				if (rewrite) {
 					item.second = val;
 				}
 
-                return item.second;
-            }
-        }
+                                return item.second;
+                        }
+                }
 
 		/* Collision stat */
 		if (!data[key_hash].empty()) {
 			__collision_count += 1;
 		}
 
-        data[key_hash].push_front(std::pair<const Key, Val>(key, val));
-        ++__count;
+                data[key_hash].push_front(std::pair<const Key, Val>(key, val));
+                ++__count;
 
 
-        //std::cout << "Load: " << load() << '\n';
-        if (load() > 70) {
-            resize_up();
+                //std::cout << "Load: " << load() << '\n';
+                if (load() > 70) {
+                        resize_up();
 			return (*static_search(data, key)).second; // hash of key might've changed (%size) :D
-        }
+                }
 
-        return data[key_hash].front().second;
-    }
+                return data[key_hash].front().second;
+        }
 
 	template <typename Key, typename Val, typename Hash>
 	Val& htable<Key, Val, Hash>::operator [] (const Key& key)
@@ -255,70 +255,70 @@ namespace iz {
 		return insert(key, null_val, false);
 	}
 
-    /* */
-    template <typename Key, typename Val, typename Hash>
-    void htable<Key, Val, Hash>::remove(const Key& key)
-    {
-        //print_green("remove...\n");
-        size_t key_hash;
-
-        key_hash = hash(key) % size;
-        // print_hashed(key, size);
-
-        typename bucket<Key, Val>::iterator itr;
-        for (
-                itr = data[key_hash].begin();
-                itr != data[key_hash].end();
-                ++itr
-            )
+        /* */
+        template <typename Key, typename Val, typename Hash>
+        void htable<Key, Val, Hash>::remove(const Key& key)
         {
-            if ((*itr).first == key) {
-                data[key_hash].erase(itr);
-                --__count;
+                //print_green("remove...\n");
+                size_t key_hash;
 
-                //std::cout << "Load: " << load() << '\n';
-                if (load() < 10) {
-                    resize_down();
+                key_hash = hash(key) % size;
+                // print_hashed(key, size);
+
+                typename bucket<Key, Val>::iterator itr;
+                for (
+                        itr = data[key_hash].begin();
+                        itr != data[key_hash].end();
+                        ++itr
+                        )
+                {
+                        if ((*itr).first == key) {
+                                data[key_hash].erase(itr);
+                                --__count;
+
+                                //std::cout << "Load: " << load() << '\n';
+                                if (load() < 10) {
+                                        resize_down();
+                                }
+
+                                return;
+                        }
                 }
-
-                return;
-            }
+                // Key was not found.
         }
-        // Key was not found.
-    }
 
 
-    /* */
-    template <typename Key, typename Val, typename Hash>
-    void htable<Key, Val, Hash>::resize(unsigned new_base_size)
-    {
-        base_size = new_base_size;
-        size = next_prime(base_size);
+        /* */
+        template <typename Key, typename Val, typename Hash>
+        void htable<Key, Val, Hash>::resize(unsigned new_base_size)
+        {
+                base_size = new_base_size;
+                size = next_prime(base_size);
 
-        buckets_vector<Key, Val> temp;
+                buckets_vector<Key, Val> temp;
 
-        bucketcpy(temp, data);
-        data.clear();
-        data.resize(size);
+                bucketcpy(temp, data);
+                data.clear();
+                data.resize(size);
 
-        for (auto& bucket : temp)
-            for (auto& item : bucket)
-                insert(item.first, item.second);
+                for (auto& bucket : temp)
+                        for (auto& item : bucket)
+                                insert(item.first, item.second);
 
-        temp.clear();
-    }
+                temp.clear();
+        }
 
-    /* Double or half size. */
-    template <typename Key, typename Val, typename Hash>
-    void htable<Key, Val, Hash>::resize_up()
-    {
-        resize(base_size * 2);
-    }
-    template <typename Key, typename Val, typename Hash>
-    void htable<Key, Val, Hash>::resize_down()
-    {
-        resize(base_size / 2);
-    }
+        /* Double or half size. */
+        template <typename Key, typename Val, typename Hash>
+        void htable<Key, Val, Hash>::resize_up()
+        {
+                resize(base_size * 2);
+        }
+        template <typename Key, typename Val, typename Hash>
+        void htable<Key, Val, Hash>::resize_down()
+        {
+                resize(base_size / 2);
+        }
 
 	/* */
 	template <typename Key, typename Val, typename Hash>
@@ -339,66 +339,66 @@ namespace iz {
 	}
 
 
-    /* Helper - Used only by resize. */
-    template <typename Key, typename Val>
-    const buckets_vector<Key, Val>&
-    bucketcpy (buckets_vector<Key, Val>& dest, const buckets_vector<Key, Val>& src)
-    {
-        dest.clear();
-        dest.resize(src.size());
+        /* Helper - Used only by resize. */
+        template <typename Key, typename Val>
+        const buckets_vector<Key, Val>&
+        bucketcpy (buckets_vector<Key, Val>& dest, const buckets_vector<Key, Val>& src)
+        {
+                dest.clear();
+                dest.resize(src.size());
 
-        for (unsigned bucket_index = 0; bucket_index < src.size(); ++bucket_index) {
-            for (const auto& item : src[bucket_index]) {
-                dest[bucket_index].push_front(item);
-            }
+                for (unsigned bucket_index = 0; bucket_index < src.size(); ++bucket_index) {
+                        for (const auto& item : src[bucket_index]) {
+                                dest[bucket_index].push_front(item);
+                        }
+                }
+
+                return dest;
         }
 
-        return dest;
-    }
-
-    /* Calc. load */
-    template <typename Key, typename Val, typename Hash>
-    unsigned htable<Key, Val, Hash>::load() const
-    {
-        return __count * 100 / size;
-    }
-
-    /* */
-    template <typename Key, typename Val, typename Hash>
-    void htable<Key, Val, Hash>::map(std::function<void(ht_item<Key, Val>&)> action)
-    {
-        for (auto& bucket : data) {
-            for (auto& item : bucket) {
-                action(item);
-            }
+        /* Calc. load */
+        template <typename Key, typename Val, typename Hash>
+        unsigned htable<Key, Val, Hash>::load() const
+        {
+                return __count * 100 / size;
         }
-    }
+
+        /* */
+        template <typename Key, typename Val, typename Hash>
+        void htable<Key, Val, Hash>::map(std::function<void(ht_item<Key, Val>&)> action)
+        {
+                for (auto& bucket : data) {
+                        for (auto& item : bucket) {
+                                action(item);
+                        }
+                }
+        }
 
 
-    /* Print */
-    template <typename Key, typename Val, typename Hash>
-    std::ostream& operator << (std::ostream& out, htable<Key, Val, Hash> ht)
-    {
+        /* Print */
+        template <typename Key, typename Val, typename Hash>
+        std::ostream& operator << (std::ostream& out, htable<Key, Val, Hash> ht)
+        {
 		for (const auto& item : ht) {
 			out << "( " << item.first << ", " << item.second << " )\n";
 		}
 
-        return out;
-    }
+                return out;
+        }
 
 
 	/* @Begin Iterator */
 	template <typename Key, typename Val, typename Hash>
 	htable<Key, Val, Hash>::iterator
-		::iterator()
+        ::iterator()
 	{
 		init = false;
 	}
 
 	template <typename Key, typename Val, typename Hash>
 	htable<Key, Val, Hash>::iterator
-		::iterator(typename buckets_vector<Key, Val>::iterator begin,
-			typename buckets_vector<Key, Val>::iterator end)
+        ::iterator(typename buckets_vector<Key, Val>::iterator begin,
+                   typename buckets_vector<Key, Val>::iterator end)
 	{
 		init = true;
 		buckets_end = end;
@@ -418,8 +418,8 @@ namespace iz {
 
 	template <typename Key, typename Val, typename Hash>
 	typename htable<Key, Val, Hash>::iterator&
-		htable<Key, Val, Hash>::iterator
-		::operator ++ ()
+        htable<Key, Val, Hash>::iterator
+        ::operator ++ ()
 	{
 		req(init);
 
@@ -451,8 +451,8 @@ namespace iz {
 
 	template <typename Key, typename Val, typename Hash>
 	typename htable<Key, Val, Hash>::iterator
-		htable<Key, Val, Hash>::iterator
-		::operator ++ (int)
+        htable<Key, Val, Hash>::iterator
+        ::operator ++ (int)
 	{
 		iterator ret_val = *this;
 		++(*this);
@@ -461,8 +461,8 @@ namespace iz {
 
 	template <typename Key, typename Val, typename Hash>
 	ht_item<Key, Val>&
-		htable<Key, Val, Hash>::iterator
-		::operator * ()
+        htable<Key, Val, Hash>::iterator
+        ::operator * ()
 	{
 		req(init);
 		req(!reached_end(), "Trying to access null data.");
@@ -473,8 +473,8 @@ namespace iz {
 
 	template <typename Key, typename Val, typename Hash>
 	bool
-		htable<Key, Val, Hash>::iterator
-		::operator == (const iterator& other) const
+        htable<Key, Val, Hash>::iterator
+        ::operator == (const iterator& other) const
 	{
 		req(init);
 
@@ -491,16 +491,16 @@ namespace iz {
 
 	template <typename Key, typename Val, typename Hash>
 	bool
-		htable<Key, Val, Hash>::iterator
-		::operator != (const iterator& other) const
+        htable<Key, Val, Hash>::iterator
+        ::operator != (const iterator& other) const
 	{
 		return !(*this == other);
 	}
 
 	template <typename Key, typename Val, typename Hash>
 	typename htable<Key, Val, Hash>::iterator&
-		htable<Key, Val, Hash>::iterator
-		::find(const Key& key)
+        htable<Key, Val, Hash>::iterator
+        ::find(const Key& key)
 	{
 		req(init);
 
@@ -517,8 +517,8 @@ namespace iz {
 
 	template <typename Key, typename Val, typename Hash>
 	bool
-		htable<Key, Val, Hash>::iterator
-		::reached_end() const
+        htable<Key, Val, Hash>::iterator
+        ::reached_end() const
 	{
 		req(init);
 		return current_bucket == buckets_end;
@@ -529,17 +529,17 @@ namespace iz {
 	/* @Begin Bucket Iterator */
 	template <typename Key, typename Val, typename Hash>
 	htable<Key, Val, Hash>::bucket_iterator
-		::bucket_iterator()
+        ::bucket_iterator()
 	{
 		init = false;
 	}
 
 	template <typename Key, typename Val, typename Hash>
 	htable<Key, Val, Hash>::bucket_iterator
-		::bucket_iterator(
-			typename buckets_vector<Key, Val>::iterator begin,
-			typename buckets_vector<Key, Val>::iterator end,
-			const Key& key
+        ::bucket_iterator(
+                typename buckets_vector<Key, Val>::iterator begin,
+                typename buckets_vector<Key, Val>::iterator end,
+                const Key& key
 		)
 	{
 		find(begin, end, key);
@@ -548,8 +548,8 @@ namespace iz {
 
 	template <typename Key, typename Val, typename Hash>
 	typename htable<Key, Val, Hash>::bucket_iterator&
-		htable<Key, Val, Hash>::bucket_iterator
-		::operator ++ ()
+        htable<Key, Val, Hash>::bucket_iterator
+        ::operator ++ ()
 	{
 		req(init);
 
@@ -561,8 +561,8 @@ namespace iz {
 
 	template <typename Key, typename Val, typename Hash>
 	typename htable<Key, Val, Hash>::bucket_iterator
-		htable<Key, Val, Hash>::bucket_iterator
-		::operator ++ (int)
+        htable<Key, Val, Hash>::bucket_iterator
+        ::operator ++ (int)
 	{
 		bucket_iterator ret_val = *this;
 		++(*this);
@@ -571,8 +571,8 @@ namespace iz {
 
 	template <typename Key, typename Val, typename Hash>
 	ht_item<Key, Val>&
-		htable<Key, Val, Hash>::bucket_iterator
-		::operator * ()
+        htable<Key, Val, Hash>::bucket_iterator
+        ::operator * ()
 	{
 		req(init);
 		req(!reached_end(), "Trying to access null data.");
@@ -581,8 +581,8 @@ namespace iz {
 
 	template <typename Key, typename Val, typename Hash>
 	bool
-		htable<Key, Val, Hash>::bucket_iterator
-		::operator == (const bucket_iterator& other) const
+        htable<Key, Val, Hash>::bucket_iterator
+        ::operator == (const bucket_iterator& other) const
 	{
 		req(init);
 		return current_item != other.current_item;
@@ -590,19 +590,19 @@ namespace iz {
 
 	template <typename Key, typename Val, typename Hash>
 	bool
-		htable<Key, Val, Hash>::bucket_iterator
-		::operator != (const bucket_iterator& other) const
+        htable<Key, Val, Hash>::bucket_iterator
+        ::operator != (const bucket_iterator& other) const
 	{
 		return !(*this == other);
 	}
 
 	template <typename Key, typename Val, typename Hash>
 	typename htable<Key, Val, Hash>::bucket_iterator&
-		htable<Key, Val, Hash>::bucket_iterator
-		::find(
-			typename buckets_vector<Key, Val>::iterator begin,
-			typename buckets_vector<Key, Val>::iterator end,
-			const Key& key
+        htable<Key, Val, Hash>::bucket_iterator
+        ::find(
+                typename buckets_vector<Key, Val>::iterator begin,
+                typename buckets_vector<Key, Val>::iterator end,
+                const Key& key
 		)
 	{
 		htable<Key, Val, Hash>::iterator itr(begin, end);
@@ -622,8 +622,8 @@ namespace iz {
 
 	template <typename Key, typename Val, typename Hash>
 	bool
-		htable<Key, Val, Hash>::bucket_iterator
-		::reached_end() const
+        htable<Key, Val, Hash>::bucket_iterator
+        ::reached_end() const
 	{
 		req(init);
 		return current_item == bucket_end;
@@ -631,45 +631,45 @@ namespace iz {
 	/* @End Bucket bucket_iterator */
 
 
-    template <typename Key, typename Hash>
-    void print_hashed(const Key& key, unsigned size)
-    {
-        Hash hash;
-        size_t key_hash;
+        template <typename Key, typename Hash>
+        void print_hashed(const Key& key, unsigned size)
+        {
+                Hash hash;
+                size_t key_hash;
 
-        key_hash = hash(key)%size;
-        std::cout << key << " => " << hash(key) << " mod " << size << " = " << key_hash << '\n';
-    }
+                key_hash = hash(key)%size;
+                std::cout << key << " => " << hash(key) << " mod " << size << " = " << key_hash << '\n';
+        }
 }
 
 /* Helpers */
 int is_prime(long long n)
 {
-    if (n < 2) {
-        return -1;
-    }
-    if (n < 4) {
-        return 1;
-    }
-    if (n % 2 == 0) {
-        return 0;
-    }
-
-    for (long long i = 3; i <= std::floor(std::sqrt(n)); i += 2) {
-        if (n % i == 0) {
-            return 0;
+        if (n < 2) {
+                return -1;
         }
-    }
+        if (n < 4) {
+                return 1;
+        }
+        if (n % 2 == 0) {
+                return 0;
+        }
 
-    return 1;
+        for (long long i = 3; i <= std::floor(std::sqrt(n)); i += 2) {
+                if (n % i == 0) {
+                        return 0;
+                }
+        }
+
+        return 1;
 }
 
 int next_prime(int n)
 {
-    while (is_prime(n) != 1) {
-        ++n;
-    }
-    return n;
+        while (is_prime(n) != 1) {
+                ++n;
+        }
+        return n;
 }
 
 #endif // !__hash_table_hh
