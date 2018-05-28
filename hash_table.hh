@@ -3,27 +3,16 @@
 
 /*
    hash< Key, Val, Hash >
-
 container:
     std::vector< std::list<Val> >;
 
-methods:
-    insert(Key, Val) ~~~ hash[Key] = Val    // inserts only unique Keys
-    delete(Key)
+[WAIT] methods:
     delete_objs_also(Key)
     delete_arrays_also(Key)
 
-    search(Key) => iterator ... hash[Key] => val
-
 iterator:
-    nonconst_bidirectional_iterator
     // def: iterator until gobal end; seperate bucket iterator
-
-
-	DONE: iterator find(key);
-	 ...
-
-	... Change to open addressing.
+	TODO: bucket iterator
    */
 
 #include <utility>
@@ -49,6 +38,7 @@ namespace iz {
     template <typename Key, typename Hash = std::hash<Key> >
     void print_hashed(const Key& key, unsigned size);
 
+	/* Aliases */
     template <typename Key, typename Val>
     using ht_item = std::pair<const Key, Val>;
 
@@ -58,9 +48,11 @@ namespace iz {
     template <typename Key, typename Val>
     using buckets_vector = std::vector< bucket<Key, Val> >;
 
+	/* bucketcpy */
     template <typename Key, typename Val>
     const buckets_vector<Key, Val>&
     bucketcpy (buckets_vector<Key, Val>&, const buckets_vector<Key, Val>&);
+
 
     template <typename Key, typename Val, typename Hash>
     class htable;
@@ -72,8 +64,87 @@ namespace iz {
     class htable
     {
     public:
+		class bucket_iterator
+		{
+		private:
+			typename bucket<Key, Val>::iterator current_item;
+			typename bucket<Key, Val>::iterator bucket_end;
+			bool init;
+
+		public:
+			bucket_iterator() {
+				init = false;
+			}
+
+			bucket_iterator(
+				typename buckets_vector<Key, Val>::iterator begin,
+				typename buckets_vector<Key, Val>::iterator end,
+				const Key& key
+				)
+			{
+				find(begin, end, key);
+			}
+
+			bool end() {
+				req(init);
+				return current_item == bucket_end;
+			}
+
+			bucket_iterator& operator ++ () {
+				req(init);
+				
+				if (current_item != bucket_end) {
+					++current_item;
+				}
+				return *this;
+			}
+
+			bucket_iterator operator ++ (int) {
+				bucket_iterator ret_val = *this;
+				++(*this);
+				return ret_val;
+			}
+
+			ht_item<Key, Val>& operator * () {
+				req(init);
+				req(current_item != bucket_end, "Trying to access null data.");
+				return *current_item;
+			}
+
+			bool operator == (const bucket_iterator& other) const {
+				req(init);
+				return current_item != other.current_item;
+			}
+
+			bool operator != (const bucket_iterator& other) const {
+				return !(*this == other);
+			}
+
+			bucket_iterator& find(
+				typename buckets_vector<Key, Val>::iterator begin,
+				typename buckets_vector<Key, Val>::iterator end,
+				const Key& key
+				)
+			{
+				htable<Key, Val, Hash>::iterator itr(begin, end);
+				itr.find(key);
+
+				if (itr.current_bucket != itr.buckets_end) {
+					current_item = (*(itr.current_bucket)).begin();
+					bucket_end = (*(itr.current_bucket)).end();
+					init = true;
+				}
+				else {
+					init = false;
+				}
+
+				return *this;
+			}
+		};
+
         class iterator
         {
+			friend class htable<Key, Val, Hash>::bucket_iterator;
         private:
             typename bucket<Key, Val>::iterator current_item;
             typename buckets_vector<Key, Val>::iterator current_bucket;
@@ -179,8 +250,13 @@ namespace iz {
 
 				return *this;
 			}
-
         };
+
+		bucket_iterator find_bucket(const Key& key) {
+			bucket_iterator itr;
+			itr.find(data.begin(), data.end(), key);
+			return itr;
+		}
 
 		iterator find(const Key& key) {
 			iterator itr(data.begin(), data.end());
@@ -212,17 +288,34 @@ namespace iz {
         void resize_down();
 
         unsigned load() const;
+		unsigned nelems() const;
 
         static Hash hash;
 		buckets_vector<Key, Val> data;
 
         void map(std::function<void(ht_item<Key, Val>&)>);
+
+		void reset_collision_count();
+		unsigned collision_count();
     private:
 
+		unsigned __collision_count;
         unsigned size;
         unsigned base_size;
         unsigned count;
     };
+
+	template <typename Key, typename Val, typename Hash>
+	unsigned htable<Key, Val, Hash>::collision_count()
+	{
+		return __collision_count;
+	}
+
+	template <typename Key, typename Val, typename Hash>
+	void htable<Key, Val, Hash>::reset_collision_count()
+	{
+		__collision_count = 0;
+	}
 
     template <typename Key, typename Val, typename Hash>
     Hash htable<Key, Val, Hash>::hash;
@@ -230,6 +323,8 @@ namespace iz {
     template <typename Key, typename Val, typename Hash>
     htable<Key, Val, Hash>::htable(unsigned init_size)
     {
+		__collision_count = 0;
+
         if (init_size < HTABLE_INIT_SIZE) {
             base_size = HTABLE_INIT_SIZE;
         }
@@ -247,7 +342,7 @@ namespace iz {
     template <typename Key, typename Val, typename Hash>
     Val& htable<Key, Val, Hash>::insert(const Key& key, const Val& val, bool rewrite)
     {
-        print_green("Insert...\n");
+        //print_green("Insert...\n");
         size_t key_hash;
 
         key_hash = hash(key) % size;
@@ -263,13 +358,18 @@ namespace iz {
             }
         }
 
+		if (!data[key_hash].empty()) {
+			__collision_count += 1;
+		}
+
         data[key_hash].push_front(std::pair<const Key, Val>(key, val));
         ++count;
 
 
-        std::cout << "Load: " << load() << '\n';
+        //std::cout << "Load: " << load() << '\n';
         if (load() > 70) {
             resize_up();
+			return (*static_search(data, key)).second; // hash of key might've changed (%size) :D
         }
 
         return data[key_hash].front().second;
@@ -287,7 +387,7 @@ namespace iz {
     template <typename Key, typename Val, typename Hash>
     void htable<Key, Val, Hash>::remove(const Key& key)
     {
-        print_green("remove...\n");
+        //print_green("remove...\n");
         size_t key_hash;
 
         key_hash = hash(key) % size;
@@ -304,7 +404,7 @@ namespace iz {
                 data[key_hash].erase(itr);
                 --count;
 
-                std::cout << "Load: " << load() << '\n';
+                //std::cout << "Load: " << load() << '\n';
                 if (load() < 10) {
                     resize_down();
                 }
@@ -352,7 +452,7 @@ namespace iz {
 	template <typename Key, typename Val, typename Hash>
 	ht_item<Key, Val>* htable<Key, Val, Hash>::static_search(buckets_vector<Key, Val>& data, const Key& key)
 	{
-		print_green("Search...\n");
+		//print_green("Search...\n");
 		size_t key_hash;
 
 		key_hash = hash(key) % data.size();
@@ -391,6 +491,13 @@ namespace iz {
         return count * 100 / size;
     }
 
+	/* ret Numeber of keys */
+	template <typename Key, typename Val, typename Hash>
+	unsigned htable<Key, Val, Hash>::nelems() const
+	{
+		return count;
+	}
+
     /* */
     template <typename Key, typename Val, typename Hash>
     void htable<Key, Val, Hash>::map(std::function<void(ht_item<Key, Val>&)> action)
@@ -422,7 +529,7 @@ namespace iz {
         size_t key_hash;
 
         key_hash = hash(key)%size;
-        std::cout << key << " => " << hash(key) << " mod " << size << " = " << key_hash << '\n';
+        //std::cout << key << " => " << hash(key) << " mod " << size << " = " << key_hash << '\n';
     }
 }
 

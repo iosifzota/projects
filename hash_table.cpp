@@ -1,10 +1,49 @@
 #include <iostream>
 #include <string>
+#include <fstream>
 
 #include "hash_table.hh"
 #include "req.hh"
 
+/*
+	TODO: more input
+	TODO: count collision
+*/
+void test_base();
+void pause_then_clear();
+void test_hash();
+
 int main()
+{
+	test_base();
+	pause_then_clear();
+	//test_hash();
+
+	return 0;
+}
+
+#define INPUT_FILE "Text.txt"
+
+void test_hash()
+{
+	std::ifstream input(INPUT_FILE);
+	std::string word;
+    iz::htable<std::string, int> test;
+
+	req(input.good(), "Error opening file: " INPUT_FILE);
+
+	for (int i = 0; input >> word; ++i) {
+		test.insert(word, i);
+		std::cout << '.';
+	}
+
+	std::cout << test << '\n';
+	std::cout << "Number of collisions: " << test.collision_count() << '\n';
+
+	input.close();
+}
+
+void test_base()
 {
     iz::htable<std::string, int> test;
 
@@ -46,7 +85,7 @@ int main()
 		std::cout << "\tAfter: " <<  test["Joni"] << '\n';
 	);
 
-    test_wrap("find...",
+    test_wrap("find",
         req( "Joni" == (*test.static_search(test.data, "Joni")).first );
         req( "Joni" == (*(test.find("Joni"))).first );
 
@@ -55,5 +94,18 @@ int main()
         }
     );
 
-    return 0;
+	auto bitr = test.find_bucket("Ronaldo");
+
+	for (; !bitr.end(); ++bitr) {
+		std::cout << (*bitr).first << '\n';
+	}
+}
+
+
+void pause_then_clear()
+{
+#ifdef _WIN32
+	system("pause");
+	system("cls");
+#endif
 }
