@@ -21,8 +21,8 @@ namespace iz {
 	template <typename Key, typename Val, typename Less>
 	struct Less_key;
 
-    template <typename Key, typename Val>
-    using rbitem = std::pair<const Key, Val>;
+        template <typename Key, typename Val>
+        using rbitem = std::pair<const Key, Val>;
 
 	template <typename Key, typename Val>
 	using shared_map_node = shared_rb_node< rbitem<Key, Val> >;
@@ -52,7 +52,7 @@ namespace iz {
 		class base_iterator
 		{
 		protected:
-            std::weak_ptr< RB_Node< rbitem<Key, Val> > > current;
+                        std::weak_ptr< RB_Node< rbitem<Key, Val> > > current;
 
 		public:
 
@@ -60,13 +60,13 @@ namespace iz {
 			bool operator != (const base_iterator& other) const;
 
 			rbitem<Key, Val>& operator * () {
-                shared_map_node<Key, Val> temp(static_cast< shared_map_node<Key, Val> >(current)); // current: weak_ptr
+                                shared_map_node<Key, Val> temp(static_cast< shared_map_node<Key, Val> >(current)); // current: weak_ptr
 
-                req(temp != nullptr);
-                req(temp != NIL);
+                                req(temp != nullptr);
+                                req(temp != NIL);
 
-                return temp->data;
-            }
+                                return temp->data;
+                        }
 
 
 			base_iterator& find(const rbitem<Key, Val>& data, const shared_map_node<Key, Val>& root) {
@@ -128,7 +128,7 @@ namespace iz {
 
 		inline Val& operator [] (const Key& key);
 
-        /* Auguments. */
+                /* Auguments. */
 		using rb_map_tree<Key, Val, Less>::size;
 		using rb_map_tree<Key, Val, Less>::empty;
 		using rb_map_tree<Key, Val, Less>::clear;
@@ -141,8 +141,8 @@ namespace iz {
 		Val garbage;
 		dev_null<Val>(garbage);
 
-        forward_iterator itr = begin();
-        itr.find(std::pair<const Key, Val>(key, garbage), root);
+                forward_iterator itr = begin();
+                itr.find(std::pair<const Key, Val>(key, garbage), root);
 
 		return itr;
 	}
@@ -236,7 +236,7 @@ namespace iz {
 
 
 	/*
-         * Backward iterator
+         * Reverse iterator
          */
 	template <typename Key, typename Val, typename Less>
 	map<Key, Val, Less>::reverse_iterator::reverse_iterator(shared_map_node<Key, Val> begin_root)
