@@ -23,7 +23,12 @@ int main()
 	return 0;
 }
 
+
+#if  defined (__GNUC__) || defined(__GNUG__)
+#define INPUT_FILE "../input/rand_strings.txt"
+#else
 #define INPUT_FILE "Text.txt"
+#endif
 
 void test_hash()
 {
@@ -38,12 +43,12 @@ void test_hash()
 		test.insert(word, i);
 		std::cout << '.';
 	}
-	
-	req(test.count() == i);
+
+	req(test.count() == (unsigned)i);
 
 	std::cout << test << '\n';
 	std::cout << "Number of collisions: " << test.collision_count() << '\n';
-	std::cout << "Load: " << test.load();
+	std::cout << "Load: " << test.load() << '\n';
 
 	input.close();
 }

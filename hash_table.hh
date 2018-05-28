@@ -638,7 +638,7 @@ namespace iz {
         size_t key_hash;
 
         key_hash = hash(key)%size;
-        //std::cout << key << " => " << hash(key) << " mod " << size << " = " << key_hash << '\n';
+        std::cout << key << " => " << hash(key) << " mod " << size << " = " << key_hash << '\n';
     }
 }
 
