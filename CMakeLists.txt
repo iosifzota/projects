@@ -25,6 +25,7 @@ add_executable(btrees basic_btree.hh RB-node.hh rbtree.hh map.hh binary_trees.cp
 add_executable(redblack basic_btree.hh RB-node.hh rbtree.hh req.hh req.cpp rb-tree.cpp)
 
 add_executable(hash hash_table.cpp hash_table.hh req.cpp)
+add_executable(test_hashes test_hashes.cpp hash_table.hh req.cpp)
 
 # add_executable(mat
 #     matrix.cpp

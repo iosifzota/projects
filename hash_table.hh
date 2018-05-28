@@ -218,7 +218,7 @@ namespace iz {
         size_t key_hash;
 
         key_hash = hash(key) % size;
-        print_hashed(key, size);
+        // print_hashed(key, size);
 
         for (auto& item : data[key_hash]) {
             if (item.first == key) {
@@ -263,7 +263,7 @@ namespace iz {
         size_t key_hash;
 
         key_hash = hash(key) % size;
-        print_hashed(key, size);
+        // print_hashed(key, size);
 
         typename bucket<Key, Val>::iterator itr;
         for (
@@ -328,7 +328,7 @@ namespace iz {
 		size_t key_hash;
 
 		key_hash = hash(key) % data.size();
-		print_hashed(key, data.size());
+		// print_hashed(key, data.size());
 
 		for (auto& item : data[key_hash]) {
 			if (item.first == key) {
