@@ -9,10 +9,6 @@ container:
 [WAIT] methods:
     delete_objs_also(Key)
     delete_arrays_also(Key)
-
-iterator:
-    // def: iterator until gobal end; seperate bucket iterator
-	TODO: bucket iterator
    */
 
 #include <utility>
@@ -48,7 +44,7 @@ namespace iz {
     template <typename Key, typename Val>
     using buckets_vector = std::vector< bucket<Key, Val> >;
 
-	/* bucketcpy */
+	/* bucketcpy(dest, src) */
     template <typename Key, typename Val>
     const buckets_vector<Key, Val>&
     bucketcpy (buckets_vector<Key, Val>&, const buckets_vector<Key, Val>&);
@@ -63,7 +59,38 @@ namespace iz {
     template <typename Key, typename Val, typename Hash = std::hash<Key> >
     class htable
     {
+	private:
+		unsigned size;
+		unsigned base_size;
+		unsigned __collision_count;
+		unsigned __count;
+
     public:
+		static Hash hash;
+		buckets_vector<Key, Val> data;
+
+        htable(unsigned init_size = HTABLE_INIT_SIZE);
+
+        Val& insert(const Key&, const Val&, bool rewrite = true);
+		Val& operator [] (const Key&);
+
+        void remove(const Key&);
+
+        void resize(unsigned);
+        void resize_up();
+        void resize_down();
+
+		static ht_item<Key, Val>* static_search(buckets_vector<Key, Val>& data, const Key&);
+        void map(std::function<void(ht_item<Key, Val>&)>);
+
+        unsigned load() const;
+		unsigned count() const;
+
+		/* Collision stats */
+		void reset_collision_count();
+		unsigned collision_count();
+
+		/* Iterators */
 		class bucket_iterator
 		{
 		private:
@@ -72,185 +99,55 @@ namespace iz {
 			bool init;
 
 		public:
-			bucket_iterator() {
-				init = false;
-			}
+			bucket_iterator();
 
 			bucket_iterator(
 				typename buckets_vector<Key, Val>::iterator begin,
 				typename buckets_vector<Key, Val>::iterator end,
 				const Key& key
-				)
-			{
-				find(begin, end, key);
-			}
+			);
 
-			bool end() {
-				req(init);
-				return current_item == bucket_end;
-			}
+			bool reached_end() const;
 
-			bucket_iterator& operator ++ () {
-				req(init);
-				
-				if (current_item != bucket_end) {
-					++current_item;
-				}
-				return *this;
-			}
+			bucket_iterator& operator ++ ();
+			bucket_iterator operator ++ (int);
 
-			bucket_iterator operator ++ (int) {
-				bucket_iterator ret_val = *this;
-				++(*this);
-				return ret_val;
-			}
+			bool operator == (const bucket_iterator& other) const;
+			bool operator != (const bucket_iterator& other) const;
 
-			ht_item<Key, Val>& operator * () {
-				req(init);
-				req(current_item != bucket_end, "Trying to access null data.");
-				return *current_item;
-			}
+			ht_item<Key, Val>& operator * ();
 
-			bool operator == (const bucket_iterator& other) const {
-				req(init);
-				return current_item != other.current_item;
-			}
-
-			bool operator != (const bucket_iterator& other) const {
-				return !(*this == other);
-			}
-
-			bucket_iterator& find(
-				typename buckets_vector<Key, Val>::iterator begin,
-				typename buckets_vector<Key, Val>::iterator end,
-				const Key& key
-				)
-			{
-				htable<Key, Val, Hash>::iterator itr(begin, end);
-				itr.find(key);
-
-				if (itr.current_bucket != itr.buckets_end) {
-					current_item = (*(itr.current_bucket)).begin();
-					bucket_end = (*(itr.current_bucket)).end();
-					init = true;
-				}
-				else {
-					init = false;
-				}
-
-				return *this;
-			}
+			bucket_iterator& find(  typename buckets_vector<Key, Val>::iterator begin,
+									typename buckets_vector<Key, Val>::iterator end,
+									const Key& key );
 		};
 
-        class iterator
-        {
+		class iterator
+		{
 			friend class htable<Key, Val, Hash>::bucket_iterator;
-        private:
-            typename bucket<Key, Val>::iterator current_item;
-            typename buckets_vector<Key, Val>::iterator current_bucket;
-            typename buckets_vector<Key, Val>::iterator buckets_end;
-            bool init;
+		private:
+			typename bucket<Key, Val>::iterator current_item;
+			typename buckets_vector<Key, Val>::iterator current_bucket;
+			typename buckets_vector<Key, Val>::iterator buckets_end;
+			bool init;
 
-        public:
-            iterator() {
-                init = false;
-            }
+		public:
+			iterator();
 
-            iterator(
-                    typename buckets_vector<Key, Val>::iterator begin,
-                    typename buckets_vector<Key, Val>::iterator end
-                    )
-            {
-                init = true;
-                buckets_end = end;
+			iterator(typename buckets_vector<Key, Val>::iterator begin,
+				typename buckets_vector<Key, Val>::iterator end);
 
-                /* Skip empty buckets. */
-                for (
-                        current_bucket = begin;
-                        current_bucket != end && (*current_bucket).empty();
-                        ++current_bucket
-                    )
-                { ; }
+			iterator& operator ++ ();
+			iterator  operator ++ (int);
 
-                if (current_bucket != end) {
-                    current_item = (*current_bucket).begin();
-                }
-            }
+			bool operator == (const iterator& other) const;
+			bool operator != (const iterator& other) const;
 
-            iterator& operator ++ () {
-                req(init);
+			ht_item<Key, Val>& operator * ();
+			iterator& find(const Key& key);
 
-                if (current_bucket == buckets_end) {
-                    return *this;
-                }
-
-                req(current_item != (*current_bucket).end());
-
-                ++current_item;
-
-                /* If (*current_bucket).end() is reached, get next bucket. */
-                if (current_item == (*current_bucket).end()) {
-                    for (
-                            ++current_bucket;
-                            current_bucket != buckets_end && (*current_bucket).empty();
-                            ++current_bucket
-                        )
-                    { ; }
-
-                    if (current_bucket != buckets_end) {
-                        current_item = (*current_bucket).begin();
-                    }
-                }
-
-                return *this;
-            }
-
-            iterator  operator ++ (int) {
-                iterator ret_val = *this;
-                ++(*this);
-                return ret_val;
-            }
-
-            ht_item<Key, Val>& operator * () {
-                req(init);
-                req(current_bucket != buckets_end, "Trying to access null data.");
-                req(current_item != (*current_bucket).end(), "[Debug]");
-
-                return *current_item;
-            }
-
-            bool operator == (const iterator& other) const {
-                req(init);
-                if (current_bucket != other.current_bucket) {
-                    return false;
-                }
-
-                if ( current_bucket == buckets_end ||
-                     current_item == other.current_item )
-                {
-                    return true;
-                }
-
-                return false;
-            }
-
-            bool operator != (const iterator& other) const {
-                return !(*this == other);
-            }
-
-			iterator& find(const Key& key) {
-				req(init);
-
-				while (current_bucket != buckets_end) {
-					if (key == (*current_item).first) {
-						break;
-					}
-					++(*this);
-				}
-
-				return *this;
-			}
-        };
+			bool reached_end() const;
+		};
 
 		bucket_iterator find_bucket(const Key& key) {
 			bucket_iterator itr;
@@ -264,46 +161,22 @@ namespace iz {
 			return itr;
 		}
 
-        iterator begin() {
-            iterator itr(data.begin(), data.end());
-            return itr;
-        }
-        iterator end() {
-            iterator itr(data.end(), data.end());
-            return itr;
-        }
+		iterator begin() {
+			iterator itr(data.begin(), data.end());
+			return itr;
+		}
+		iterator end() {
+			iterator itr(data.end(), data.end());
+			return itr;
+		}
 		/* end iterator */
-
-        htable(unsigned init_size = HTABLE_INIT_SIZE);
-
-		static ht_item<Key, Val>* static_search(buckets_vector<Key, Val>& data, const Key&);
-
-        Val& insert(const Key&, const Val&, bool rewrite = true);
-		Val& operator [] (const Key&);
-
-        void remove(const Key&);
-
-        void resize(unsigned);
-        void resize_up();
-        void resize_down();
-
-        unsigned load() const;
-		unsigned nelems() const;
-
-        static Hash hash;
-		buckets_vector<Key, Val> data;
-
-        void map(std::function<void(ht_item<Key, Val>&)>);
-
-		void reset_collision_count();
-		unsigned collision_count();
-    private:
-
-		unsigned __collision_count;
-        unsigned size;
-        unsigned base_size;
-        unsigned count;
     };
+
+	template <typename Key, typename Val, typename Hash>
+	unsigned htable<Key, Val, Hash>::count() const
+	{
+		return __count;
+	}
 
 	template <typename Key, typename Val, typename Hash>
 	unsigned htable<Key, Val, Hash>::collision_count()
@@ -335,7 +208,7 @@ namespace iz {
         size = next_prime(base_size);
         data.resize(size);
 
-        count = 0;
+        __count = 0;
     }
 
     /* */
@@ -358,12 +231,13 @@ namespace iz {
             }
         }
 
+		/* Collision stat */
 		if (!data[key_hash].empty()) {
 			__collision_count += 1;
 		}
 
         data[key_hash].push_front(std::pair<const Key, Val>(key, val));
-        ++count;
+        ++__count;
 
 
         //std::cout << "Load: " << load() << '\n';
@@ -379,7 +253,6 @@ namespace iz {
 	Val& htable<Key, Val, Hash>::operator [] (const Key& key)
 	{
 		Val null_val{};
-
 		return insert(key, null_val, false);
 	}
 
@@ -402,7 +275,7 @@ namespace iz {
         {
             if ((*itr).first == key) {
                 data[key_hash].erase(itr);
-                --count;
+                --__count;
 
                 //std::cout << "Load: " << load() << '\n';
                 if (load() < 10) {
@@ -488,15 +361,8 @@ namespace iz {
     template <typename Key, typename Val, typename Hash>
     unsigned htable<Key, Val, Hash>::load() const
     {
-        return count * 100 / size;
+        return __count * 100 / size;
     }
-
-	/* ret Numeber of keys */
-	template <typename Key, typename Val, typename Hash>
-	unsigned htable<Key, Val, Hash>::nelems() const
-	{
-		return count;
-	}
 
     /* */
     template <typename Key, typename Val, typename Hash>
@@ -522,6 +388,250 @@ namespace iz {
     }
 
 
+	/* @Begin Iterator */
+	template <typename Key, typename Val, typename Hash>
+	htable<Key, Val, Hash>::iterator
+		::iterator()
+	{
+		init = false;
+	}
+
+	template <typename Key, typename Val, typename Hash>
+	htable<Key, Val, Hash>::iterator
+		::iterator(typename buckets_vector<Key, Val>::iterator begin,
+			typename buckets_vector<Key, Val>::iterator end)
+	{
+		init = true;
+		buckets_end = end;
+
+		/* Skip empty buckets. */
+		for (
+			current_bucket = begin;
+			!reached_end() && (*current_bucket).empty();
+			++current_bucket
+			)
+		{ ; }
+
+		if (!reached_end()) {
+			current_item = (*current_bucket).begin();
+		}
+	}
+
+	template <typename Key, typename Val, typename Hash>
+	typename htable<Key, Val, Hash>::iterator&
+		htable<Key, Val, Hash>::iterator
+		::operator ++ ()
+	{
+		req(init);
+
+		if (reached_end()) {
+			return *this;
+		}
+
+		req(current_item != (*current_bucket).end(), "[Debug]");
+
+		/* Next */
+		++current_item;
+
+		/* If (*current_bucket).end() is reached, get next bucket. */
+		if (current_item == (*current_bucket).end()) {
+			for (
+				++current_bucket;
+				!reached_end() && (*current_bucket).empty();
+				++current_bucket
+				)
+			{ ; }
+
+			if (!reached_end()) {
+				current_item = (*current_bucket).begin();
+			}
+		}
+
+		return *this;
+	}
+
+	template <typename Key, typename Val, typename Hash>
+	typename htable<Key, Val, Hash>::iterator
+		htable<Key, Val, Hash>::iterator
+		::operator ++ (int)
+	{
+		iterator ret_val = *this;
+		++(*this);
+		return ret_val;
+	}
+
+	template <typename Key, typename Val, typename Hash>
+	ht_item<Key, Val>&
+		htable<Key, Val, Hash>::iterator
+		::operator * ()
+	{
+		req(init);
+		req(!reached_end(), "Trying to access null data.");
+		req(current_item != (*current_bucket).end(), "[Debug]");
+
+		return *current_item;
+	}
+
+	template <typename Key, typename Val, typename Hash>
+	bool
+		htable<Key, Val, Hash>::iterator
+		::operator == (const iterator& other) const
+	{
+		req(init);
+
+		if (current_bucket != other.current_bucket) {
+			return false;
+		}
+
+		if (reached_end() || current_item == other.current_item) {
+			return true;
+		}
+
+		return false;
+	}
+
+	template <typename Key, typename Val, typename Hash>
+	bool
+		htable<Key, Val, Hash>::iterator
+		::operator != (const iterator& other) const
+	{
+		return !(*this == other);
+	}
+
+	template <typename Key, typename Val, typename Hash>
+	typename htable<Key, Val, Hash>::iterator&
+		htable<Key, Val, Hash>::iterator
+		::find(const Key& key)
+	{
+		req(init);
+
+		/* Skip until key. */
+		while (!reached_end()) {
+			if (key == (*current_item).first) {
+				break;
+			}
+			++(*this);
+		}
+
+		return *this;
+	}
+
+	template <typename Key, typename Val, typename Hash>
+	bool
+		htable<Key, Val, Hash>::iterator
+		::reached_end() const
+	{
+		req(init);
+		return current_bucket == buckets_end;
+	}
+	/* @End iterator */
+
+
+	/* @Begin Bucket Iterator */
+	template <typename Key, typename Val, typename Hash>
+	htable<Key, Val, Hash>::bucket_iterator
+		::bucket_iterator()
+	{
+		init = false;
+	}
+
+	template <typename Key, typename Val, typename Hash>
+	htable<Key, Val, Hash>::bucket_iterator
+		::bucket_iterator(
+			typename buckets_vector<Key, Val>::iterator begin,
+			typename buckets_vector<Key, Val>::iterator end,
+			const Key& key
+		)
+	{
+		find(begin, end, key);
+	}
+
+
+	template <typename Key, typename Val, typename Hash>
+	typename htable<Key, Val, Hash>::bucket_iterator&
+		htable<Key, Val, Hash>::bucket_iterator
+		::operator ++ ()
+	{
+		req(init);
+
+		if (!reached_end()) {
+			++current_item;
+		}
+		return *this;
+	}
+
+	template <typename Key, typename Val, typename Hash>
+	typename htable<Key, Val, Hash>::bucket_iterator
+		htable<Key, Val, Hash>::bucket_iterator
+		::operator ++ (int)
+	{
+		bucket_iterator ret_val = *this;
+		++(*this);
+		return ret_val;
+	}
+
+	template <typename Key, typename Val, typename Hash>
+	ht_item<Key, Val>&
+		htable<Key, Val, Hash>::bucket_iterator
+		::operator * ()
+	{
+		req(init);
+		req(!reached_end(), "Trying to access null data.");
+		return *current_item;
+	}
+
+	template <typename Key, typename Val, typename Hash>
+	bool
+		htable<Key, Val, Hash>::bucket_iterator
+		::operator == (const bucket_iterator& other) const
+	{
+		req(init);
+		return current_item != other.current_item;
+	}
+
+	template <typename Key, typename Val, typename Hash>
+	bool
+		htable<Key, Val, Hash>::bucket_iterator
+		::operator != (const bucket_iterator& other) const
+	{
+		return !(*this == other);
+	}
+
+	template <typename Key, typename Val, typename Hash>
+	typename htable<Key, Val, Hash>::bucket_iterator&
+		htable<Key, Val, Hash>::bucket_iterator
+		::find(
+			typename buckets_vector<Key, Val>::iterator begin,
+			typename buckets_vector<Key, Val>::iterator end,
+			const Key& key
+		)
+	{
+		htable<Key, Val, Hash>::iterator itr(begin, end);
+		itr.find(key);
+
+		if (!itr.reached_end()) {
+			current_item = (*(itr.current_bucket)).begin();
+			bucket_end = (*(itr.current_bucket)).end();
+			init = true;
+		}
+		else {
+			init = false;
+		}
+
+		return *this;
+	}
+
+	template <typename Key, typename Val, typename Hash>
+	bool
+		htable<Key, Val, Hash>::bucket_iterator
+		::reached_end() const
+	{
+		req(init);
+		return current_item == bucket_end;
+	}
+	/* @End Bucket bucket_iterator */
+
+
     template <typename Key, typename Hash>
     void print_hashed(const Key& key, unsigned size)
     {
@@ -533,7 +643,7 @@ namespace iz {
     }
 }
 
-
+/* Helpers */
 int is_prime(long long n)
 {
     if (n < 2) {
@@ -564,15 +674,3 @@ int next_prime(int n)
 }
 
 #endif // !__hash_table_hh
-
-
-/*
-    template <typename Key, typename Val>
-    const buckets_vector<Key, Val>&
-    buckets_vector_map (buckets_vector<Key, Val>& data, std::function<void(ht_item<Key, Val>&)> action)
-    {
-        for (auto& bucket : data)
-            for (auto& item : bucket)
-                action(item);
-    }
-   */

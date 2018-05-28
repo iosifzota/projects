@@ -6,8 +6,9 @@
 #include "req.hh"
 
 /*
-	TODO: more input
-	TODO: count collision
+	DONE: more input
+	DONE: count collision
+	TODO: compare str hash functions
 */
 void test_base();
 void pause_then_clear();
@@ -17,7 +18,7 @@ int main()
 {
 	test_base();
 	pause_then_clear();
-	//test_hash();
+	test_hash();
 
 	return 0;
 }
@@ -28,14 +29,17 @@ void test_hash()
 {
 	std::ifstream input(INPUT_FILE);
 	std::string word;
-    iz::htable<std::string, int> test;
+    iz::htable<std::string, int> test(100000U);
 
 	req(input.good(), "Error opening file: " INPUT_FILE);
 
-	for (int i = 0; input >> word; ++i) {
+	int i = 0;
+	for (;input >> word; ++i) {
 		test.insert(word, i);
 		std::cout << '.';
 	}
+	
+	req(test.count() == i);
 
 	std::cout << test << '\n';
 	std::cout << "Number of collisions: " << test.collision_count() << '\n';
@@ -96,7 +100,7 @@ void test_base()
 
 	auto bitr = test.find_bucket("Ronaldo");
 
-	for (; !bitr.end(); ++bitr) {
+	for (; !bitr.reached_end(); ++bitr) {
 		std::cout << (*bitr).first << '\n';
 	}
 }
