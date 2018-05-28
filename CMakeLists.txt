@@ -21,7 +21,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
 
 add_executable(arr c_array.cpp req.cpp)
 
-add_executable(btrees basic_btree.hh RB-node.hh rbtree.hh map.hh binary_trees.cpp req.hh req.cpp)
+# add_executable(btrees basic_btree.hh RB-node.hh rbtree.hh map.hh binary_trees.cpp req.hh req.cpp)
 add_executable(redblack basic_btree.hh RB-node.hh rbtree.hh req.hh req.cpp rb-tree.cpp)
 
 add_executable(hash hash_table.cpp hash_table.hh req.cpp)

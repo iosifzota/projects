@@ -111,6 +111,7 @@ namespace iz {
 		/* --> NIL. */
 		while (current_node != NIL && not_equal(current_node->data, val)) {
             current_node->size += 1;
+            current_node->sum += val;
 
 			current_node_parent = current_node;
 
@@ -122,7 +123,7 @@ namespace iz {
 
 		/* Don't insert key twice. */
 		if (current_node != NIL) {
-            undo_size_inc(current_node_parent, NIL);
+            upwards_branch_metadata_refresh(current_node_parent);
 
 			return current_node->data;
 		}
@@ -143,6 +144,9 @@ namespace iz {
 			new_node->parent->right = new_node;
 		}
 
+        /**/
+        upwards_branch_metadata_refresh(current_node_parent);
+
 		insert_fixup(new_node);
 
 		return new_node->data;
@@ -162,6 +166,7 @@ namespace iz {
 		/* Follow crumbs to NIL. */
 		while (current_node != NIL) {
             current_node->size += 1;
+            current_node->sum += val;
 
 			current_node_parent = current_node;
 
@@ -407,17 +412,18 @@ namespace iz {
     {
         uplifted->size = downlifted->size;
 
-        downlifted->size = downlifted->left->size + downlifted->right->size + 1;
+        // downlifted->size = downlifted->left->size + downlifted->right->size + 1;
+        downlifted->update_metadata();
     }
 
 	template <typename T, typename Less>
     void rbtree<T, Less>::upwards_branch_metadata_refresh(shared_rb_node<T> node)
     {
-        req(node != nullptr);
-
         /* 'til root refresh metadata. */
-        for (; node != NIL; node = node->parent)
-            node->size = node->left->size + node->right->size + 1;
+        for (; node != NIL; node = node->parent) {
+            req(node != nullptr);
+            node->update_metadata();
+        }
     }
 
 	template <typename T, typename Less>

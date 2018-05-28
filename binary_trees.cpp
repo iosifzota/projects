@@ -151,6 +151,7 @@ int main()
 		);
 	);
 
+    /*
 	iz::rbtree<int_str> test;
 
 	test.insert({ 3,  "child" });
@@ -161,6 +162,7 @@ int main()
 		std::cout << itr.str << '(' << itr.x << ") ";
 	}
 	std::cout << '\n';
+    */
 
 	return 0;
 }
