@@ -13,6 +13,7 @@
 #include <stack>
 #include <queue>
 #include <string>
+#include <cmath>
 
 /* delete_me */
 #include <iostream>
@@ -57,6 +58,7 @@ namespace iz {
             static Not_Equal not_equal;
 
             static shared<T_Node> static_search(const T&, const shared<T_Node>&);
+            static shared<T_Node> static_search_map(const T&, const shared<T_Node>&, std::function<void(const shared<T_Node>&)>);
             static shared<T_Node> static_search_interval_intersection(const T&, const T&, const shared<T_Node>&);
             static shared<T_Node> successor(shared<T_Node>);
             static shared<T_Node> predecessor(shared<T_Node>);
@@ -118,6 +120,7 @@ namespace iz {
             inline void clear();
             inline bool empty() const;
             shared<T_Node> search(const T&) const;
+			shared<T_Node> search_map(const T&, std::function<void(const shared<T_Node>&)>) const;
             shared<T_Node> search_interval_intersection(const T&, const T&) const;
 
 			void preorder_map(std::function<void(const shared<T_Node>&)>);
@@ -133,6 +136,7 @@ namespace iz {
             virtual shared<T_Node> extract(shared<T_Node>) = 0;
 
 
+			void print_levels(std::ostream&) const;
 
             /* TODO: Move outside */
 			void pretty_print() {
@@ -146,12 +150,74 @@ namespace iz {
 					static_pretty_print(current->right, indent + 10);
 
 					std::cout << '\n' << std::setw(indent) << ' ';
-					std::cout << current->data << '\n';
+					std::cout << current << '\n';
 
 					static_pretty_print(current->left, indent + 10);
 				}
 			}
     };
+
+	template <typename T, typename T_Node, typename Less>
+	void basic_btree<T, T_Node, Less>::print_levels(std::ostream& out) const
+	{
+		std::queue< std::pair<shared<T_Node>, unsigned> > fringe;
+		shared<T_Node> current_node, temp;
+		unsigned prev_level, current_level;
+
+		req(root != nullptr);
+		if (root == NIL) {
+			return;
+		}
+
+		prev_level = 0;
+		fringe.push({ root, 1 });
+
+		unsigned tab, tabs;
+		while (!fringe.empty()) {
+			current_node = fringe.front().first;
+			current_level = fringe.front().second;
+
+			req(current_node != nullptr, "[Debug]");
+
+			if (current_node != NIL) {
+				fringe.push(std::pair<shared<T_Node>, unsigned>(current_node->left, current_level + 1));
+				fringe.push(std::pair<shared<T_Node>, unsigned>(current_node->right, current_level + 1));
+			}
+
+			if (prev_level != current_level) {
+				prev_level = current_level;
+				out << '\n';
+
+				/* Left margin. */
+				tabs = (current_node->size > 1) ? ((unsigned)std::log2(current_node->size * 4)) : 2;
+				for (
+					tab = 0;
+					tab < tabs;
+					++tab)
+				{
+					out << ' ';
+				}
+			}
+			else {
+				/* Left padding. */
+				tabs = (current_node->size > 1) ? ((unsigned)std::log2(current_node->size * 4)) : 1;
+				for (
+					tab = 0;
+					tab < tabs;
+					++tab)
+				{
+					out << ' ';
+				}
+			}
+
+			if (current_node != NIL)
+				out << current_node;
+			else
+				out << ' ';
+
+			fringe.pop();
+		}
+	}
 
     template <typename T, typename T_Node, typename Less>
     typename basic_btree<T, T_Node, Less>::const_iterator
@@ -458,7 +524,7 @@ namespace iz {
     template <typename T, typename T_Node, typename Less>
     shared<T_Node> basic_btree<T, T_Node, Less>::search_interval_intersection(const T& keyA, const T& keyB) const
     {
-        static_search_interval_intersection(keyA, keyB, root);
+        return static_search_interval_intersection(keyA, keyB, root);
     }
 
     template <typename T, typename T_Node, typename Less>
@@ -472,14 +538,14 @@ namespace iz {
         shared<T_Node> node(begin);
         T lower_key, heigher_key;
 
-        lower_key = std::min(lower_key, heigher_key);
-        heigher_key = std::max(lower_key, heigher_key);
+        lower_key = std::min(keyA, keyB);
+        heigher_key = std::max(keyA, keyB);
 
         while (
                 node != NIL &&
                     (
-                     less(node->data, lower_key) || // HERE
-                     greater(node->data, heigher_key)
+                     less(node->data, lower_key) ||
+                     ( greater(node->data, heigher_key) && not_equal(node->data, heigher_key) )
                     )
                 )
         {
@@ -511,6 +577,36 @@ namespace iz {
 
         return node;
     }
+
+	/* Search tree of root =begin=. */
+	template <typename T, typename T_Node, typename Less>
+	shared<T_Node>
+		basic_btree<T, T_Node, Less>
+		::static_search_map(const T& key, const shared<T_Node>& begin, std::function<void(const shared<T_Node>&)> action)
+	{
+		shared<T_Node> node(begin);
+
+		while (node != NIL && not_equal(node->data, key)) {
+			action(node);
+
+			if (less(key, node->data)) {
+				node = node->left;
+			}
+			else {
+				node = node->right;
+			}
+		}
+
+		return node;
+	}
+
+	template <typename T, typename T_Node, typename Less>
+	shared<T_Node>
+		basic_btree<T, T_Node, Less>
+		::search_map(const T& key, std::function<void(const shared<T_Node>&)> action) const
+	{
+		return static_search_map(key, root, action);
+	}
 
     /* Make connection: parent of =discarded= <-> =replacement=. */
     template <typename T, typename T_Node, typename Less>
