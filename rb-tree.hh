@@ -2,11 +2,11 @@
 #define __rb_tree_hh
 
 
-	template <typename T, typename Less>
-	void rbtree<T, Less>::print_levels(std::ostream& out) const
+	template <typename T, typename T_Node, typename Less>
+	void basic_btree<T, T_Node, Less>::print_levels(std::ostream& out) const
 	{
-		std::queue< pair<shared_rb_node<T>, unsigned> > fringe;
-		shared_rb_node<T> current_node, temp;
+		std::queue< pair<shared<T_Node>, unsigned> > fringe;
+		shared<T_Node> current_node, temp;
 		unsigned prev_level, current_level;
 
 		req(root != nullptr);
