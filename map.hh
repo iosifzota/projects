@@ -21,14 +21,14 @@ namespace iz {
 	template <typename Key, typename Val, typename Less>
 	struct Less_key;
 
-        template <typename Key, typename Val>
-        using rbitem = std::pair<const Key, Val>;
+    template <typename Key, typename Val>
+    class rb_item;
 
 	template <typename Key, typename Val>
-	using shared_map_node = shared_rb_node< rbitem<Key, Val> >;
+	using shared_map_node = shared_rb_node< rb_item<Key, Val> >;
 
 	template <typename Key, typename Val, typename Less>
-	using rb_map_tree = rbtree < rbitem<Key, Val>, Less_key<Key, Val, Less> >;
+	using rb_map_tree = rbtree < rb_item<Key, Val>, Less_key<Key, Val, Less> >;
 
 
 	template <typename Key, typename Val, typename Less = std::less<Key> >
@@ -52,14 +52,14 @@ namespace iz {
 		class base_iterator
 		{
 		protected:
-                        std::weak_ptr< RB_Node< rbitem<Key, Val> > > current;
+                        std::weak_ptr< RB_Node< rb_item<Key, Val> > > current;
 
 		public:
 
 			bool operator == (const base_iterator& other) const;
 			bool operator != (const base_iterator& other) const;
 
-			rbitem<Key, Val>& operator * () {
+			rb_item<Key, Val>& operator * () {
                                 shared_map_node<Key, Val> temp(static_cast< shared_map_node<Key, Val> >(current)); // current: weak_ptr
 
                                 req(temp != nullptr);
@@ -69,7 +69,7 @@ namespace iz {
                         }
 
 
-			base_iterator& find(const rbitem<Key, Val>& data, const shared_map_node<Key, Val>& root) {
+			base_iterator& find(const rb_item<Key, Val>& data, const shared_map_node<Key, Val>& root) {
 				current = static_search(data, root);
 				return *this;
 			}
@@ -142,7 +142,7 @@ namespace iz {
 		dev_null<Val>(garbage);
 
                 forward_iterator itr = begin();
-                itr.find(std::pair<const Key, Val>(key, garbage), root);
+                itr.find(rb_item<Key, Val>(key, garbage), root);
 
 		return itr;
 	}
@@ -153,14 +153,14 @@ namespace iz {
 		Val garbage;
 		dev_null<Val>(garbage);
 
-		return ( this->insert_unique(std::pair<const Key, Val>(key, garbage)) ).second;
+		return ( this->insert_unique(rb_item<Key, Val>(key, garbage)) ).second;
 	}
 
 	template <typename Key, typename Val, typename Less = std::less<Key> >
 	struct Less_key {
 		static Less less_key;
 
-		inline bool operator () (const rbitem<Key, Val>& lhs, const rbitem<Key, Val>& rhs) {
+		inline bool operator () (const rb_item<Key, Val>& lhs, const rb_item<Key, Val>& rhs) {
 			return less_key(lhs.first, rhs.first);
 		}
 	};
@@ -284,6 +284,33 @@ namespace iz {
 		return ret_val;
 	}
 
+
+
+    template <typename Key, typename Val>
+    class rb_item : public std::pair<const Key, Val>
+    {
+    public:
+        using std::pair<const Key, Val>::first;
+        using std::pair<const Key, Val>::second;
+
+        rb_item() : std::pair<const Key, Val>() {}
+        rb_item(const Key& key, const Val& val) : std::pair<const Key, Val>(key, val) {}
+
+        const rb_item<Key, Val>& operator + (const rb_item<Key, Val>& rhs) {
+            this->second = this->second + rhs.second;
+            return *this;
+        }
+
+        const rb_item<Key, Val>& operator = (const rb_item<Key, Val>& rhs) {
+            this->second = rhs.second;
+            return *this;
+        }
+
+        const rb_item<Key, Val>& operator += (const rb_item<Key, Val>& rhs) {
+            *this = *this + rhs;
+            return *this;
+        }
+    };
 }
 
 #endif // !__map_hh

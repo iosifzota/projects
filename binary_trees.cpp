@@ -116,6 +116,10 @@ int main()
 			redblack.print_tree(3);
 		);
 
+		tt_wrap("Levels",
+			redblack.print_tree(4);
+		);
+
 		tt_wrap("operator = 0",
 			req(test_eq.empty());
 
