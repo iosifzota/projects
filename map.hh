@@ -21,8 +21,8 @@ namespace iz {
 	template <typename Key, typename Val, typename Less>
 	struct Less_key;
 
-    template <typename Key, typename Val>
-    class rb_item;
+	template <typename Key, typename Val>
+	struct rb_item;
 
 	template <typename Key, typename Val>
 	using shared_map_node = shared_rb_node< rb_item<Key, Val> >;
@@ -52,7 +52,7 @@ namespace iz {
 		class base_iterator
 		{
 		protected:
-                        std::weak_ptr< RB_Node< rb_item<Key, Val> > > current;
+			std::weak_ptr< RB_Node< rb_item<Key, Val> > > current;
 
 		public:
 
@@ -60,13 +60,13 @@ namespace iz {
 			bool operator != (const base_iterator& other) const;
 
 			rb_item<Key, Val>& operator * () {
-                                shared_map_node<Key, Val> temp(static_cast< shared_map_node<Key, Val> >(current)); // current: weak_ptr
+				shared_map_node<Key, Val> temp(static_cast<shared_map_node<Key, Val>>(current)); // current: weak_ptr
 
-                                req(temp != nullptr);
-                                req(temp != NIL);
+				req(temp != nullptr);
+				req(temp != NIL);
 
-                                return temp->data;
-                        }
+				return temp->data;
+			}
 
 
 			base_iterator& find(const rb_item<Key, Val>& data, const shared_map_node<Key, Val>& root) {
@@ -128,7 +128,7 @@ namespace iz {
 
 		inline Val& operator [] (const Key& key);
 
-                /* Auguments. */
+		/* Auguments. */
 		using rb_map_tree<Key, Val, Less>::size;
 		using rb_map_tree<Key, Val, Less>::empty;
 		using rb_map_tree<Key, Val, Less>::clear;
@@ -136,13 +136,13 @@ namespace iz {
 
 	template <typename Key, typename Val, typename Less>
 	typename map<Key, Val, Less>::forward_iterator
-        map<Key, Val, Less>::find(const Key& key) const
+		map<Key, Val, Less>::find(const Key& key) const
 	{
 		Val garbage;
 		dev_null<Val>(garbage);
 
-                forward_iterator itr = begin();
-                itr.find(rb_item<Key, Val>(key, garbage), root);
+		forward_iterator itr = begin();
+		itr.find(rb_item<Key, Val>(key, garbage), root);
 
 		return itr;
 	}
@@ -153,7 +153,7 @@ namespace iz {
 		Val garbage;
 		dev_null<Val>(garbage);
 
-		return ( this->insert_unique(rb_item<Key, Val>(key, garbage)) ).second;
+		return (this->insert_unique(rb_item<Key, Val>(key, garbage))).second;
 	}
 
 	template <typename Key, typename Val, typename Less = std::less<Key> >
@@ -174,7 +174,7 @@ namespace iz {
 	 */
 	template <typename Key, typename Val, typename Less>
 	bool map<Key, Val, Less>::base_iterator::operator == (const base_iterator& other) const {
-		return static_cast< shared_map_node<Key, Val> >(current) == static_cast< shared_map_node<Key, Val> >(other.current);
+		return static_cast<shared_map_node<Key, Val>>(current) == static_cast<shared_map_node<Key, Val>>(other.current);
 	}
 
 	template <typename Key, typename Val, typename Less>
@@ -196,17 +196,17 @@ namespace iz {
 	/* Increment operators. */
 	template <typename Key, typename Val, typename Less>
 	typename map<Key, Val, Less>::forward_iterator&
-        map<Key, Val, Less>::forward_iterator::operator ++ ()
+		map<Key, Val, Less>::forward_iterator::operator ++ ()
 	{
-                req(!current.expired());
+		req(!current.expired());
 
-		current = successor(static_cast< shared_map_node<Key, Val> >(current));
+		current = successor(static_cast<shared_map_node<Key, Val>>(current));
 		return *this;
 	}
 
 	template <typename Key, typename Val, typename Less>
 	typename map<Key, Val, Less>::forward_iterator
-        map<Key, Val, Less>::forward_iterator::operator ++ (int)
+		map<Key, Val, Less>::forward_iterator::operator ++ (int)
 	{
 		forward_iterator ret_val = *this;
 		++(*this);
@@ -216,17 +216,17 @@ namespace iz {
 	/* Decrement operators. */
 	template <typename Key, typename Val, typename Less>
 	typename map<Key, Val, Less>::forward_iterator&
-        map<Key, Val, Less>::forward_iterator::operator -- ()
+		map<Key, Val, Less>::forward_iterator::operator -- ()
 	{
-                req(!current.expired());
+		req(!current.expired());
 
-		current = predecessor(static_cast< shared_map_node<Key, Val> >(current));
+		current = predecessor(static_cast<shared_map_node<Key, Val>>(current));
 		return *this;
 	}
 
 	template <typename Key, typename Val, typename Less>
 	typename map<Key, Val, Less>::forward_iterator
-        map<Key, Val, Less>::forward_iterator::operator -- (int)
+		map<Key, Val, Less>::forward_iterator::operator -- (int)
 	{
 		forward_iterator ret_val = *this;
 		++(*this);
@@ -236,8 +236,8 @@ namespace iz {
 
 
 	/*
-         * Reverse iterator
-         */
+		 * Reverse iterator
+		 */
 	template <typename Key, typename Val, typename Less>
 	map<Key, Val, Less>::reverse_iterator::reverse_iterator(shared_map_node<Key, Val> begin_root)
 	{
@@ -247,17 +247,17 @@ namespace iz {
 	/* Increment operators. */
 	template <typename Key, typename Val, typename Less>
 	typename map<Key, Val, Less>::reverse_iterator&
-        map<Key, Val, Less>::reverse_iterator::operator ++ ()
+		map<Key, Val, Less>::reverse_iterator::operator ++ ()
 	{
-                req(!current.expired());
+		req(!current.expired());
 
-		current = predecessor(static_cast< shared_map_node<Key, Val> >(current));
+		current = predecessor(static_cast<shared_map_node<Key, Val>>(current));
 		return *this;
 	}
 
 	template <typename Key, typename Val, typename Less>
 	typename map<Key, Val, Less>::reverse_iterator
-        map<Key, Val, Less>::reverse_iterator::operator ++ (int)
+		map<Key, Val, Less>::reverse_iterator::operator ++ (int)
 	{
 		reverse_iterator ret_val = *this;
 		++(*this);
@@ -267,17 +267,17 @@ namespace iz {
 	/* Decrement operators. */
 	template <typename Key, typename Val, typename Less>
 	typename map<Key, Val, Less>::reverse_iterator&
-        map<Key, Val, Less>::reverse_iterator::operator -- ()
+		map<Key, Val, Less>::reverse_iterator::operator -- ()
 	{
-                req(!current.expired());
+		req(!current.expired());
 
-		current = successor(static_cast< shared_map_node<Key, Val> >(current));
+		current = successor(static_cast<shared_map_node<Key, Val>>(current));
 		return *this;
 	}
 
 	template <typename Key, typename Val, typename Less>
 	typename map<Key, Val, Less>::reverse_iterator
-        map<Key, Val, Less>::reverse_iterator::operator -- (int)
+		map<Key, Val, Less>::reverse_iterator::operator -- (int)
 	{
 		reverse_iterator ret_val = *this;
 		++(*this);
@@ -286,31 +286,46 @@ namespace iz {
 
 
 
-    template <typename Key, typename Val>
-    class rb_item : public std::pair<const Key, Val>
-    {
-    public:
-        using std::pair<const Key, Val>::first;
-        using std::pair<const Key, Val>::second;
+	template <typename Key, typename Val>
+	struct rb_item : public std::pair<const Key, Val>
+	{
+		using std::pair<const Key, Val>::first;
+		using std::pair<const Key, Val>::second;
 
-        rb_item() : std::pair<const Key, Val>() {}
-        rb_item(const Key& key, const Val& val) : std::pair<const Key, Val>(key, val) {}
+		rb_item() : std::pair<const Key, Val>() {}
+		rb_item(const Key& key, const Val& val) : std::pair<const Key, Val>(key, val) {}
 
-        const rb_item<Key, Val>& operator + (const rb_item<Key, Val>& rhs) {
-            this->second = this->second + rhs.second;
-            return *this;
-        }
+		const rb_item<Key, Val>& operator + (const rb_item<Key, Val>& rhs) {
+			this->second = this->second + rhs.second;
+			return *this;
+		}
 
-        const rb_item<Key, Val>& operator = (const rb_item<Key, Val>& rhs) {
-            this->second = rhs.second;
-            return *this;
-        }
+		const rb_item<Key, Val>& operator = (const rb_item<Key, Val>& rhs) {
+			this->second = rhs.second;
+			return *this;
+		}
 
-        const rb_item<Key, Val>& operator += (const rb_item<Key, Val>& rhs) {
-            *this = *this + rhs;
-            return *this;
-        }
-    };
+		const rb_item<Key, Val>& operator += (const rb_item<Key, Val>& rhs) {
+			*this = *this + rhs;
+			return *this;
+		}
+
+		const rb_item<Key, Val>& operator / (const rb_item<Key, Val>& rhs) {
+			this->second = this->second / rhs.second;
+			return *this;
+		}
+
+		const rb_item<Key, Val>& operator / (const Val& rhs) {
+			this->second = this->second / rhs;
+			return *this;
+		}
+	};
+
+	template <typename Key, typename Val>
+	std::ostream& operator << (std::ostream&out, const rb_item<Key, Val>& i)
+	{
+		return out << i.first << ", " << i.second;
+	}
 }
 
 #endif // !__map_hh
