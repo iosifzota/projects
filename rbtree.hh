@@ -30,7 +30,7 @@ namespace iz {
 		using basic_btree<T, RB_Node<T>, Less>::successor;
 		using basic_btree<T, RB_Node<T>, Less>::predecessor;
 
-
+		using basic_btree<T, RB_Node<T>, Less>::static_search_map;
 
 	private:
 		void setup_sentinel(const shared_rb_node<T>& node) {
@@ -44,6 +44,8 @@ namespace iz {
 		void extract_fixup(shared_rb_node<T>);
 
 	public:
+		using basic_btree<T, RB_Node<T>, Less>::search_interval_intersection; // DELETE ME
+
 		rbtree() : basic_btree<T, RB_Node<T>, Less>::basic_btree() {
 			setup_sentinel(NIL);
 		}
@@ -67,6 +69,8 @@ namespace iz {
 		shared_rb_node<T> extract(shared_rb_node<T>);
 		shared_rb_node<T> extract(const T&);
 
+		T median(const T&, const T&) const;
+
         /* Auguments. */
 		using basic_btree<T, RB_Node<T>, Less>::empty;
 		using basic_btree<T, RB_Node<T>, Less>::clear;
@@ -75,6 +79,82 @@ namespace iz {
 		using basic_btree<T, RB_Node<T>, Less>::preorder_map;
 		using basic_btree<T, RB_Node<T>, Less>::operator=;
 	};
+
+	template <typename T, typename Less>
+	T rbtree<T, Less>::median(const T& keyA, const T& keyB) const
+	{
+		T sum{};
+		unsigned nelems = 0;
+
+		T lower_key, heigher_key;
+		shared_rb_node<T> intersection, node;
+
+
+		lower_key = std::min(keyA, keyB);
+		heigher_key = std::max(keyA, keyB);
+
+		intersection = this->search_interval_intersection(lower_key, heigher_key);
+
+		if (intersection == this->NIL) {
+			return sum;
+		}
+
+		/* Add intersection only once. */
+		sum    += intersection->data;
+		nelems += 1;
+
+		if (this->not_equal(lower_key, intersection->data)) {
+			node = this->static_search_map(lower_key, intersection->left, [&](const shared_rb_node<T>& elem) {
+				if (this->greater(elem->data, lower_key)) {
+					sum += elem->data;
+					nelems += 1;
+
+					sum += elem->right->sum;
+					nelems += elem->right->size;
+				}
+			});
+
+			// same if lower_key was found
+			if (node != this->NIL) {
+				sum += node->data;
+				nelems += 1;
+
+				sum += node->right->sum;
+				nelems += node->right->size;
+			}
+		}
+
+		std::cout << "Sum so far: " << sum << '\n';
+		std::cout << "Nr. so far: " << nelems << '\n';
+
+		if (this->equal(heigher_key, intersection->data)) {
+			return sum / nelems; // done, nothing to the right.
+		}
+
+		node = this->static_search_map(heigher_key, intersection->right, [&](const shared_rb_node<T>& elem) {
+			if (this->less(elem->data, heigher_key)) {
+				sum += elem->data;
+				nelems += 1;
+
+				sum += elem->left->sum;
+				nelems += elem->left->size;
+			}
+		});
+
+		// same if height_key was found
+		if (node != this->NIL) {
+			sum += node->data;
+			nelems += 1;
+
+			sum += node->left->sum;
+			nelems += node->left->size;
+		}
+
+		std::cout << "Sum final: " << sum << '\n';
+		std::cout << "Nr. final: " << nelems << '\n';
+
+		return sum / nelems;
+	}
 
 	template <typename T, typename Less>
 	void rbtree<T, Less>::construct(T* begin, T* end)
@@ -88,19 +168,6 @@ namespace iz {
 		}
 	}
 
-
-    /* Called only by =insert_unique()=. */
-    template <typename T>
-    static void undo_size_inc(shared_rb_node<T> node, const shared_rb_node<T>& NIL)
-    {
-        req(node != nullptr);
-
-        for (; node != NIL; node = node->parent) {
-            req(node->size != 0, "[Debug]");
-            node->size -= 1;
-        }
-    }
-
 	template <typename T, typename Less>
 	T& rbtree<T, Less>::insert_unique(const T& val)
 	{
@@ -109,13 +176,13 @@ namespace iz {
 		req(root != nullptr);
 
 		/* --> NIL. */
-		while (current_node != NIL && not_equal(current_node->data, val)) {
+		while (current_node != NIL && this->not_equal(current_node->data, val)) {
             current_node->size += 1;
             current_node->sum += val;
 
 			current_node_parent = current_node;
 
-			if (less(val, current_node->data))
+			if (this->less(val, current_node->data))
 				current_node = current_node->left;
 			else
 				current_node = current_node->right;
@@ -137,7 +204,7 @@ namespace iz {
 		if (current_node_parent == NIL) {
 			root = new_node;
 		}
-		else if (less(new_node->data, new_node->parent->data)) {
+		else if (this->less(new_node->data, new_node->parent->data)) {
 			new_node->parent->left = new_node;
 		}
 		else {
@@ -170,7 +237,7 @@ namespace iz {
 
 			current_node_parent = current_node;
 
-			if (less(new_node->data, current_node->data))
+			if (this->less(new_node->data, current_node->data))
 				current_node = current_node->left;
 			else
 				current_node = current_node->right;
@@ -183,7 +250,7 @@ namespace iz {
 		if (current_node_parent == NIL) {
 			root = new_node;
 		}
-		else if (less(new_node->data, new_node->parent->data)) {
+		else if (this->less(new_node->data, new_node->parent->data)) {
 			new_node->parent->left = new_node;
 		}
 		else {
@@ -410,10 +477,12 @@ namespace iz {
             const shared_rb_node<T>& downlifted,
             const shared_rb_node<T>& uplifted)
     {
-        uplifted->size = downlifted->size;
-
-        // downlifted->size = downlifted->left->size + downlifted->right->size + 1;
+		/*
+		 * Order matters here because downlifted has outdated meta
+		 * and is a now a child of uplifted. So downlifted.update_meta first!!
+		 */
         downlifted->update_metadata();
+		uplifted->update_metadata();
     }
 
 	template <typename T, typename Less>

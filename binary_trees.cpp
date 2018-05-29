@@ -12,6 +12,11 @@
 struct int_str {
 	int x;
 	std::string str;
+
+	const int_str& operator += (const int_str& other) {
+		this->x += other.x;
+		return *this;
+	}
 };
 
 namespace std {
@@ -155,18 +160,35 @@ int main()
 		);
 	);
 
-    /*
-	iz::rbtree<int_str> test;
+	iz::rbtree<int> test_median;
+	test_wrap("Median",
+		for (auto i : { 1, 2, 3, 4, 5 }) {
+			test_median.insert(i);
+		}
+		std::cout << "Result: " << test_median.median(3, 5) << '\n';
+	);
 
-	test.insert({ 3,  "child" });
-	test.insert({ 21, "bchild" });
-	test.insert({ 4, "ahild" });
+	test_wrap("level printing",
+		test_median.print_levels(std::cout);
+		std::cout << "\n\n";
+		test_eq.print_levels(std::cout);
+		);
 
-	for (auto& itr : test) {
-		std::cout << itr.str << '(' << itr.x << ") ";
-	}
-	std::cout << '\n';
-    */
+
+	test_wrap("Median",
+		std::cout << "Result: " << test_eq.median(32, 302) << '\n';
+	);
+    
+	//iz::rbtree<int_str> test;
+
+	//test.insert({ 3,  "child" });
+	//test.insert({ 21, "bchild" });
+	//test.insert({ 4, "ahild" });
+
+	//for (auto& itr : test) {
+	//	std::cout << itr.str << '(' << itr.x << ") ";
+	//}
+	//std::cout << '\n';
 
 	return 0;
 }
