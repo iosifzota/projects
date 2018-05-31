@@ -19,7 +19,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
 
-add_executable(arr c_array.cpp req.cpp)
+add_executable(arr vec.cpp req.cpp)
 add_executable(btrees basic_btree.hh RB-node.hh rbtree.hh map.hh binary_trees.cpp req.hh req.cpp)
 add_executable(redblack basic_btree.hh RB-node.hh rbtree.hh req.hh req.cpp rb-tree.cpp)
 

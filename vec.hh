@@ -1,270 +1,364 @@
 #ifndef __vec_hh
 #define __vec_hh
 
-#include "utils.hh"
-#include "req.hh"
-#include "generic.hh"
-
+#include <memory>
+#include <istream>
+#include <ostream>
+#include <initializer_list>
 #include <iostream>
 
-namespace iz {
-        generic(T)
-        struct neutral_element;
+#include "req.hh"
 
-        generic(T, E = neutral_element<T>)
-        class vector;
-
-        generic(T, E)
-        std::ostream& operator << (std::ostream&, const vector<T, E>&);
-
-        generic(T, E)
-        class vector
-        {
-        private:
-                T *first, *current, *last;
-
-        public:
-                void init_ptrs() { first = current = last = 0; };
-                vector() { init_ptrs(); };
-                explicit vector(unsigned size) { init_ptrs(); resize(size, true); };
-
-                ~vector() { if (first) delete[] first; init_ptrs(); }
-
-                void resize(unsigned, bool neutralize = false);
-                void init_data(T*);
-
-                unsigned capacity() const;
-                unsigned size() const;
-
-                void push_back(const T&);
-
-                inline T& operator[] (unsigned);
-                inline const T& operator[] (unsigned) const;
-
-                friend std::ostream& operator << <T, E>(std::ostream&, const vector<T, E>&);
-
-                static void duplicate(T *dest, const T *src, unsigned nelems);
-        };
-
-        generic(T, E)
-        void vector<T, E>::push_back(const T& val)
-        {
-                req(first < last, "p_back() [Debug]");
-                req(current < last, "p_back() [Debug]");
-
-                *current++ = 12;
-
-                if (current == last) {
-                        resize(2 * size() + 1);
-                }
-        }
-
-        generic(T, E)
-        void vector<T, E>::resize(unsigned new_size, bool neutralize)
-        {
-                T *new_storage;
-                unsigned old_size;
-
-                /* Reset. */
-                if (!new_size) {
-                        if (first) {
-                                delete[] first;
-                        }
-                        init_ptrs();
-                        return;
-                }
-
-                /* TODO: Catch allocation throw. */
-                new_storage = new T[new_size];
-                old_size = size();
-
-#define print_arr(arr_ptr, nelems)                                      \
-                for (unsigned i = 0, size = nelems; i < size; ++i)      \
-                        std::cout << arr_ptr[i] << ' ';                 \
-                std::cout << '\n';
-
-                /* Transfer data and free old storage. */
-                if (first) {
-                        std::cout << "Old storage: ";
-                        print_arr(first, old_size);
-
-                        std::cout << "Before: ";
-                        print_arr(new_storage, new_size);
-
-                        duplicate(new_storage, first, min(new_size, old_size));
-
-                        std::cout << "After: ";
-                        print_arr(new_storage, new_size);
-                        std::cout << '\n';
-                        delete[] first;
-                }
-
-                /* Update storage. */
-                first = new_storage;
-                last = first + new_size;
-
-                req(capacity() == new_size, "up_storage(): Cap not checking out.");
-
-                /* If required assin new storage the =neutral_element=. */
-                if (neutralize && old_size < new_size) {
-                        std::cout << *(first + old_size);
-                        init_data(first + old_size);
-                }
-                else if (neutralize) {
-                        init_data(first);
-                }
-                else if (old_size <= new_size) {
-                        current = first + (old_size - 1);
-                }
-                else {
-                        current = first + (new_size - 1);
-                }
-        }
-
-        generic(T, E)
-        void vector<T, E>::duplicate(T *dest, const T *src, unsigned nelems)
-        {
-                req(dest, "dup(): Null dest.");
-                req(src, "dup(): Null src.");
-
-                for (unsigned i = 0; i < nelems; ++i) {
-                        *dest++ = *(src + i);
-                }
-        }
-
-        generic(T, E)
-        void vector<T, E>::init_data(T *begin)
-        {
-                if (!first) {
-                        return;
-                }
-                req(begin, "init_data(): Null begin.");
-                req(begin < last, "init_data() [Debug]");
-
-                E neutral;
-                for (current = begin; (current + 1) != last; ++current) {
-                        *current = neutral();
-                }
-                *current = 0;
-        }
-
-        generic(T, E)
-        unsigned vector<T, E>::capacity() const
-        {
-                req(last >= first, "capacity() [Debug]");
-                return last - first;
-        }
-
-        generic(T, E)
-        unsigned vector<T, E>::size() const
-        {
-                if (!current) {
-                        return 0;
-                }
-                req(current >= first, "size(): Dangling current pointer. [Debug]");
-                return current - first + 1;
-        }
-
-        generic(T, E)
-        std::ostream& operator << (std::ostream& out, const vector<T, E>& v)
-        {
-                if (!v.first) {
-                        out << "(empty)\n";
-                        return out;
-                }
-
-                req(v.first < v.last, "operator<< [Debug]");
-
-                /* TODO: with iterators. */
-                for (unsigned i = 0; (v.first + i) != v.current; ++i) {
-                        out << *(v.first + i) << ' ';
-                }
-                out << *(v.current) << '\n';
-
-                return out;
-        }
-
-        generic(T, E)
-        T& vector<T, E>::operator[] (unsigned i)
-        {
-                nll; std::cout << "cap: " << capacity(); nl;
-
-
-                req(i < capacity(), "Tring to access vector out of bounds.");
-
-                if (!current || i >= size()) {
-                        current = first + i;
-                }
-
-                return *(first + i);
-        }
-
-        generic(T, E)
-        const T& vector<T, E>::operator[] (unsigned i) const
-        {
-                nll; std::cout << "cap: " << capacity(); nl;
-
-                req(i < capacity(), "Tring to read(const) vector out of bounds.");
-                return *(first + i);
-        }
-
-
-        template<>
-        struct neutral_element<int>
-        {
-                int operator ()() {
-                        return 0;
-                }
-        };
-        template<>
-        struct neutral_element<unsigned>
-        {
-                unsigned operator ()() {
-                        return 0;
-                }
-        };
-        template<>
-        struct neutral_element<long>
-        {
-                long operator ()() {
-                        return 0;
-                }
-        };
-        template<>
-        struct neutral_element<unsigned long>
-        {
-                unsigned long operator ()() {
-                        return 0;
-                }
-        };
-        template<>
-        struct neutral_element<long long>
-        {
-                long long operator ()() {
-                        return 0;
-                }
-        };
-        template<>
-        struct neutral_element<unsigned long long>
-        {
-                unsigned long long operator ()() {
-                        return 0;
-                }
-        };
-        template<>
-        struct neutral_element<float>
-        {
-                float operator ()() {
-                        return 0;
-                }
-        };
-        template<>
-        struct neutral_element<double>
-        {
-                double operator ()() {
-                        return 0;
-                }
-        };
+template <typename T>
+void new_req(T** ptr, unsigned blocks)
+{
+    req(blocks, "Cannot allocate 0 blocks.");
+    req(ptr != nullptr);
+    req((*ptr = new T[blocks]{}) != nullptr); // ++ {}
 }
 
-#endif
+namespace iz {
+    template <typename T, unsigned GROWTH>
+    class vec;
+
+    template <typename T, unsigned GROWTH>
+    std::istream& operator >> (std::istream&, vec<T, GROWTH>&);
+
+    template <typename T, unsigned GROWTH>
+    std::ostream& operator << (std::ostream&, const vec<T, GROWTH>&);
+
+    template<typename T, unsigned GROWTH = 5>
+    class vec
+    {
+        private:
+            T* begin_ptr;
+            T* end_ptr;
+            unsigned cap;
+
+            /* Memory management */
+            inline void reset_fields();
+            T* alloc(unsigned);
+            T* realloc(unsigned);
+
+            static const unsigned realloc_factor;
+            inline unsigned calc_realloc_size() const;
+
+        public:
+            vec();
+            explicit vec(unsigned size);
+            vec(unsigned size, const T& fill_value);
+            vec(const T*, const T*);
+            ~vec();
+
+            /* Copy constuctors */
+            vec(const vec&);
+            vec(std::initializer_list<T> l);
+            // -- constr from vec*
+
+            /* Iterators */
+            const T* begin() const {
+                return begin_ptr;
+            }
+            const T* end() const {
+                return end_ptr;
+            }
+
+            /**/
+            inline void resize(unsigned);
+            inline void push_back(const T&);
+
+            /* Access */
+            inline T& operator [] (unsigned);
+            inline const T& operator [] (unsigned) const;
+
+            /* Stats */
+            inline bool empty() const;
+            inline unsigned size() const;
+            inline unsigned capacity() const;
+
+            /* vec <op> vec */
+            inline const vec& operator = (const vec&);
+            // -- = *
+            inline const vec& operator += (const vec&);
+            // -- += *
+
+            /* I/O */
+            friend std::istream& operator >> <>(std::istream&, vec<T, GROWTH>&);
+            friend std::ostream& operator << <>(std::ostream&, const vec<T, GROWTH>&);
+
+            /* Helpers. */
+            static unsigned copy_raw(T* begin_dest, T* end_dest, const T* begin_src, const T* end_src);
+
+    };
+
+    template <typename T, unsigned GROWTH>
+    const unsigned vec<T, GROWTH>::realloc_factor = 2;
+
+    template <typename T, unsigned GROWTH>
+    unsigned vec<T, GROWTH>::calc_realloc_size() const
+    {
+        return capacity() + realloc_factor * (GROWTH + 1);
+    }
+
+    template <typename T, unsigned GROWTH>
+    void vec<T, GROWTH>::push_back(const T& value)
+    {
+        if (size() >= capacity()) {
+            realloc(calc_realloc_size());
+        }
+
+        *end_ptr = value;
+        ++end_ptr;
+    }
+
+    template<typename T, unsigned GROWTH>
+    T* vec<T, GROWTH>::alloc(unsigned blocks)
+    {
+        req(begin_ptr == nullptr);
+        req(end_ptr == nullptr);
+        req(blocks, "Cannot allocate 0 blocks.");
+
+        new_req(&begin_ptr, blocks);
+
+        end_ptr = begin_ptr;
+        cap = blocks;
+
+        return begin_ptr;
+    }
+
+    template<typename T, unsigned GROWTH>
+    T* vec<T, GROWTH>::realloc(unsigned blocks)
+    {
+        T* new_storage;
+        unsigned new_size; // store the new size (!capacity)
+
+        req(blocks, "Cannot realloc 0 blocks.");
+
+        if (begin_ptr == nullptr) {
+            return alloc(blocks);
+        }
+        req(end_ptr != nullptr);
+
+        new_req(&new_storage, blocks);
+        new_size =
+            copy_raw(
+                new_storage, new_storage + blocks,
+                begin_ptr, end_ptr
+            );
+
+        delete[] begin_ptr;
+        begin_ptr = new_storage;
+
+        end_ptr = new_storage + new_size;
+        cap = blocks;
+
+        return begin_ptr;
+    }
+
+    template<typename T, unsigned GROWTH>
+    unsigned vec<T, GROWTH>::copy_raw(        // end must be the ptr, after the last block
+            T* begin_dest, T* end_dest,
+            const T* begin_src, const T* end_src
+            )
+    {
+        req(begin_dest != nullptr);
+        req(end_dest != nullptr);
+        req(begin_dest <= end_dest);
+
+        req(begin_src != nullptr);
+        req(end_src != nullptr);
+        req(begin_src <= end_src);
+
+        unsigned min_size = std::min(end_dest - begin_dest, end_src - begin_src);
+
+        for (unsigned i = 0; i < min_size; ++i)
+        {
+            begin_dest[i] = begin_src[i];
+        }
+
+        return min_size;
+    }
+
+    template <typename T, unsigned GROWTH>
+    void vec<T, GROWTH>::resize(unsigned new_size)
+    {
+        req(new_size > 0);
+        realloc(new_size);
+
+        /* Move to the end. */
+        if (empty()) {
+            end_ptr = begin_ptr + capacity();
+        }
+    }
+
+    /* Meta */
+    template<typename T, unsigned GROWTH>
+    unsigned vec<T, GROWTH>::size() const
+    {
+        if (empty()) {
+            return 0;
+        }
+        return end_ptr - begin_ptr;
+    }
+
+    template<typename T, unsigned GROWTH>
+    unsigned vec<T, GROWTH>::capacity() const
+    {
+        return cap;
+    }
+
+    template<typename T, unsigned GROWTH>
+    bool vec<T, GROWTH>::empty() const
+    {
+        if (begin_ptr == nullptr) {
+            req(end_ptr == nullptr);
+        }
+        return begin_ptr == end_ptr;
+    }
+
+    /* Access. */
+    template<typename T, unsigned GROWTH>
+    T& vec<T, GROWTH>::operator [] (unsigned i)
+    {
+        req(i < size(), "Trying to access out of bounds.");
+        return begin_ptr[i];
+    }
+
+    template<typename T, unsigned GROWTH>
+    const T& vec<T, GROWTH>::operator [] (unsigned i) const
+    {
+        req(i < size(), "Trying to access out of bounds.");
+        return begin_ptr[i];
+    }
+
+    template <typename T, unsigned GROWTH>
+    const vec<T, GROWTH>& vec<T, GROWTH>::operator += (const vec<T, GROWTH>& other)
+    {
+        if (other.empty()) {
+            return *this;
+        }
+
+        realloc(size() + other.size());
+        copy_raw(end_ptr, begin_ptr + capacity(), other.begin(), other.end());
+
+        end_ptr = begin_ptr + capacity();
+
+        return *this;
+    }
+
+    template <typename T, unsigned GROWTH>
+    const vec<T, GROWTH>& vec<T, GROWTH>::operator = (const vec<T, GROWTH>& other)
+    {
+        if (begin_ptr != nullptr) {
+            req(end_ptr != nullptr);
+            delete[] begin_ptr;
+        }
+
+        reset_fields();
+
+        if (other.empty()) {
+            return *this;
+        }
+
+        alloc(other.size());
+        copy_raw(begin_ptr, (end_ptr = begin_ptr + capacity()), other.begin(), other.end());
+
+        return *this;
+    }
+
+    template<typename T, unsigned GROWTH>
+    void vec<T, GROWTH>::reset_fields()
+    {
+        begin_ptr = end_ptr = nullptr;
+        cap = 0;
+    }
+
+    template<typename T, unsigned GROWTH>
+    vec<T, GROWTH>::vec(const T* begin_arr, const T* end_arr) // end_arr must be the ptr, after the last block
+    {
+        req(begin_arr != nullptr);
+        req(end_arr != nullptr);
+        req(begin_arr < end_arr);
+
+        reset_fields();
+        alloc(end_arr - begin_arr);
+
+        copy_raw(begin_ptr, (end_ptr = begin_ptr + capacity()), begin_arr, end_arr);
+    }
+
+    template<typename T, unsigned GROWTH>
+    vec<T, GROWTH>::vec(const vec<T, GROWTH>& other)
+    {
+        reset_fields();
+        *this = other;
+    }
+
+    template<typename T, unsigned GROWTH>
+    vec<T, GROWTH>::vec(unsigned size, const T& fill_value)
+    {
+        reset_fields();
+        alloc(size);
+
+        for (unsigned i = 0; i < size; ++i) {
+            push_back(fill_value);
+        }
+    }
+
+    template<typename T, unsigned GROWTH>
+    vec<T, GROWTH>::vec(unsigned size)
+    {
+        reset_fields();
+        resize(size);
+
+        // Maybe move end_ptr to begin_ptr + capacity
+        // DONE: similar resize
+    }
+
+    template<typename T, unsigned GROWTH>
+    vec<T, GROWTH>::vec()
+    {
+        reset_fields();
+    }
+
+    template<typename T, unsigned GROWTH>
+    vec<T, GROWTH>::vec(std::initializer_list<T> l)
+    {
+        reset_fields();
+
+        for (auto itr : l) {
+            push_back(itr);
+        }
+    }
+
+    template<typename T, unsigned GROWTH>
+    vec<T, GROWTH>::~vec()
+    {
+        if (begin_ptr != nullptr) {
+            delete[] begin_ptr;
+        }
+    }
+
+    template <typename T, unsigned GROWTH>
+    std::istream& operator >> (std::istream& in, vec<T, GROWTH>& arr)
+    {
+        T temp;
+
+        while (in >> temp) {
+            arr.push_back(temp);
+        }
+        return in;
+    }
+
+
+    template <typename T, unsigned GROWTH>
+    std::ostream& operator << (std::ostream& out, const vec<T, GROWTH>& arr)
+    {
+        for (auto itr : arr) {
+            out << itr << ' ';
+        }
+        return out << '\n';
+    }
+}
+
+
+#endif // !__vec_hh
