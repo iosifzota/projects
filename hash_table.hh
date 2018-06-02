@@ -23,11 +23,9 @@
 
 #include "req.hh"
 #include "utils.hh"
+#include "utility.hh"
 
 #define HTABLE_INIT_SIZE 50
-
-int is_prime(long long);
-int next_prime(int);
 
 namespace iz {
 
@@ -49,7 +47,6 @@ namespace iz {
         const buckets_vector<Key, Val>&
         bucketcpy (buckets_vector<Key, Val>&, const buckets_vector<Key, Val>&);
 
-
         template <typename Key, typename Val, typename Hash>
         class htable;
 
@@ -66,12 +63,22 @@ namespace iz {
 		unsigned __count;
 
         public:
+                /* TODO: move to private. */
 		static Hash hash;
 		buckets_vector<Key, Val> data;
 
                 htable(unsigned init_size = HTABLE_INIT_SIZE);
 
-                Val& insert(const Key&, const Val&, bool rewrite = true);
+                /* TODO: move out. */
+                htable(const htable& other) {
+                    other.map([&](const ht_item<Key, Val>& item) {
+                            insert(item.first, item.second);
+                    });
+
+                }
+
+                Val& insert(const Key&, const Val&);
+                Val& insert_key_only(const Key&);
 		Val& operator [] (const Key&);
 
                 void remove(const Key&);
@@ -82,6 +89,7 @@ namespace iz {
 
 		static ht_item<Key, Val>* static_search(buckets_vector<Key, Val>& data, const Key&);
                 void map(std::function<void(ht_item<Key, Val>&)>);
+                void map(std::function<void(const ht_item<Key, Val>&)>) const;
 
                 unsigned load() const;
 		unsigned count() const;
@@ -212,7 +220,7 @@ namespace iz {
 
         /* */
         template <typename Key, typename Val, typename Hash>
-        Val& htable<Key, Val, Hash>::insert(const Key& key, const Val& val, bool rewrite)
+        Val& htable<Key, Val, Hash>::insert(const Key& key, const Val& val)
         {
                 //print_green("Insert...\n");
                 size_t key_hash;
@@ -222,9 +230,7 @@ namespace iz {
 
                 for (auto& item : data[key_hash]) {
                         if (item.first == key) {
-				if (rewrite) {
-					item.second = val;
-				}
+                                item.second = val;
 
                                 return item.second;
                         }
@@ -248,11 +254,41 @@ namespace iz {
                 return data[key_hash].front().second;
         }
 
+
+        template <typename Key, typename Val, typename Hash>
+        Val& htable<Key, Val, Hash>::insert_key_only(const Key& key)
+        {
+                size_t key_hash;
+
+                key_hash = hash(key) % size;
+
+                for (auto& item : data[key_hash]) {
+                        if (item.first == key) {
+                                return item.second;
+                        }
+                }
+
+		/* Collision stat */
+		if (!data[key_hash].empty()) {
+			__collision_count += 1;
+		}
+
+                data[key_hash].push_front(std::pair<const Key, Val>(key, {}));
+                ++__count;
+
+
+                if (load() > 70) {
+                        resize_up();
+			return (*static_search(data, key)).second;
+                }
+
+                return data[key_hash].front().second;
+        }
+
 	template <typename Key, typename Val, typename Hash>
 	Val& htable<Key, Val, Hash>::operator [] (const Key& key)
 	{
-		Val null_val{};
-		return insert(key, null_val, false);
+		return insert_key_only(key);
 	}
 
         /* */
@@ -369,6 +405,15 @@ namespace iz {
         {
                 for (auto& bucket : data) {
                         for (auto& item : bucket) {
+                                action(item);
+                        }
+                }
+        }
+        template <typename Key, typename Val, typename Hash>
+        void htable<Key, Val, Hash>::map(std::function<void(const ht_item<Key, Val>&)> action) const
+        {
+                for (const auto& bucket : data) {
+                        for (const auto& item : bucket) {
                                 action(item);
                         }
                 }
@@ -640,36 +685,6 @@ namespace iz {
                 key_hash = hash(key)%size;
                 std::cout << key << " => " << hash(key) << " mod " << size << " = " << key_hash << '\n';
         }
-}
-
-/* Helpers */
-int is_prime(long long n)
-{
-        if (n < 2) {
-                return -1;
-        }
-        if (n < 4) {
-                return 1;
-        }
-        if (n % 2 == 0) {
-                return 0;
-        }
-
-        for (long long i = 3; i <= std::floor(std::sqrt(n)); i += 2) {
-                if (n % i == 0) {
-                        return 0;
-                }
-        }
-
-        return 1;
-}
-
-int next_prime(int n)
-{
-        while (is_prime(n) != 1) {
-                ++n;
-        }
-        return n;
 }
 
 #endif // !__hash_table_hh
