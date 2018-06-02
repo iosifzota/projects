@@ -23,22 +23,24 @@ class heap
 {
 protected:
     std::vector<T> data;
+    static Compare cmp;
+
 public:
     /*
      * Fix heap property from current index down,
      * assuming left and right subtrees are heaps.
      */
-    void sift_down(unsigned);
+    unsigned sift_down(unsigned);
 
-    /* 
+    /*
      * Modify value at the given index.
      * Go up the heap to the final index of value.
      */
-    void sift_up(unsigned, T);
+    unsigned sift_up(unsigned, T);
 
     const T& top() const;
     void pop();
-    void push(T);
+    unsigned push(T);
     bool empty() const;
 
     void sort_inplace();
@@ -50,6 +52,9 @@ public:
     friend std::ostream& operator << <T, Compare>(std::ostream&, const heap<T, Compare>&);
 
 };
+
+template <typename T, class Compare>
+Compare heap<T, Compare>::cmp;
 
 template< typename T, class Compare >
 void heap<T, Compare>::pop()
@@ -70,29 +75,28 @@ template< typename T, class Compare >
 const T& heap<T, Compare>::top() const
 {
     req(data.size(), "Trying to access empty heap.");
-    
+
     return data[0];
 }
 
 
 template< typename T, class Compare >
-void heap<T, Compare>::push(T val)
+unsigned heap<T, Compare>::push(T val)
 {
     data.push_back(val);
-    sift_up(data.size() - 1, val);
+    return sift_up(data.size() - 1, val);
 }
 
 template< typename T, class Compare >
-void heap<T, Compare>::sift_up(unsigned i, T val)
+unsigned heap<T, Compare>::sift_up(unsigned i, T val)
 {
     req(i < data.size(), "Trying o access array out of bounds.");
 
-    Compare cmp;
     int parent_index, current_index;
 
-    /* sift_UP yo. */
+    /* sift_UP */
     if (cmp(val, data[i])) {
-        return;
+        return i;
     }
 
     current_index = i;
@@ -107,15 +111,15 @@ void heap<T, Compare>::sift_up(unsigned i, T val)
         current_index  = parent_index, parent_index = (current_index - 1) / 2
         )
     {
-
         data[current_index] = data[parent_index];
     }
 
     data[current_index] = val;
+    return current_index;
 }
 
 template< typename T, class Compare >
-void heap<T, Compare>::sift_down(unsigned i)
+unsigned heap<T, Compare>::sift_down(unsigned i)
 {
     unsigned left, right, max;
 
@@ -124,8 +128,6 @@ void heap<T, Compare>::sift_down(unsigned i)
     left = 2*i + 1;
     right = 2*i + 2;
     max = i;
-
-    Compare cmp;
 
     if (left < data.size() && cmp(data[max], data[left])) {
         max = left;
@@ -137,8 +139,10 @@ void heap<T, Compare>::sift_down(unsigned i)
 
     if (max != i) {
         swap(data, i, max);
-        sift_down(max);
+        return sift_down(max);
     }
+
+    return i;
 }
 
 template< typename T, class Compare >
