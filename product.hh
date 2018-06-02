@@ -2,10 +2,17 @@
 #define __product_hh
 
 #include <string>
+
+#include "hash_table.hh"
 #include "hashes.hh"
+
+struct Product;
+
+using Products = iz::htable<std::string, Product, Djb_Hash>;
 
 struct Product
 {
+public:
     std::string name;
     float price;
     float profit;
@@ -15,7 +22,7 @@ struct Product
 
     Product();
 
-    explicit Product(const std::string&, float init_price = invalid_price, float init_profit = invalid_profit);
+    explicit Product(const std::string&, float = invalid_price, float = invalid_profit);
 
     bool operator == (const Product&) const;
     bool operator != (const Product&) const;
@@ -23,28 +30,17 @@ struct Product
     friend std::ostream& operator << (std::ostream&, const Product&);
     friend std::istream& operator >> (std::istream&, Product&);
 
-    struct Hash {
-        static const Djb_Hash djb_hash;
-        size_t operator () (const Product&) const;
-    };
-};
+    const Product& operator = (const Product&);
 
-class Product_Stats : public Product
-{
+    /* Product stats */
+    float gross() const;
+    float net() const;
+    size_t purchases() const;
+
+    Product& operator ++ ();
+
 private:
     size_t numberof_purchases;
-
-public:
-    Product_Stats();
-    Product_Stats(const std::string&, float init_price = invalid_price, float init_profit = invalid_profit);
-
-    const Product_Stats& operator = (const Product&);
-
-    size_t gross() const;
-    size_t net() const;
-
-    /* meh */
-    size_t priority;
 };
 
 #endif // !__product_hh

@@ -1,36 +1,102 @@
 #include "customer.hh"
 
-Customer::Customer() :
+Customer::Customer()
+    :
     __id { invalid_id },
-    __inventory { nullptr },
+    __products_info { nullptr },
     __expenditure { no_expenditure },
-    __cupon { no_cupon }
+    __coupon_bits { no_coupon }
 { ; }
 
 
-Customer::Customer(Inventory* inventory, int id, float expenditure, float cupon) :
+Customer::Customer(Products* inventory, int id, float expenditure, unsigned coupon_bits)
+    :
     __id { id },
     __expenditure { expenditure },
-    __cupon { cupon }
+    __coupon_bits { coupon_bits }
 {
     req(inventory != nullptr);
-    __inventory = inventory;
+    __products_info = inventory;
 }
 
-Customer::Customer(const Customer& other) :
+Customer::Customer(const Customer& other)
+    :
     __id { other.__id },
     __shopping_cart { other.__shopping_cart },
-    __inventory { other.__inventory },
+    __products_info { other.__products_info },
     __expenditure { other.__expenditure },
-    __cupon { other.__cupon }
+    __coupon_bits { other.__coupon_bits }
 { ; }
 
 /* Helpers */
 const int Customer::invalid_id = -1;
 const float Customer::no_expenditure = 0;
-const float Customer::no_cupon = 0;
+const unsigned Customer::no_coupon = 0;
 
-float Customer::expenditure() const
+/* number of bits */
+unsigned Customer::bit_count(unsigned n)
+{
+    unsigned count;
+    for (count = 0; n; ++count) {
+        n >>= 1;
+    }
+    return count;
+}
+
+void Customer::append_coupon(unsigned bit)
+{
+    while (bit && (__coupon_bits & bit)) {
+        bit >>= 1;
+    }
+    __coupon_bits |= bit;
+}
+
+void Customer::apply_coupons(unsigned inc)
+{
+    for (
+            unsigned val = inc;
+            coupon_bits() && __expenditure;
+            val += inc, __coupon_bits >>= 1
+            )
+    {
+        if (coupon_bits() & 1) {
+            if (val > __expenditure) {
+                __expenditure = 0;
+            }
+            else {
+                __expenditure -= val;
+            }
+        }
+    }
+}
+
+unsigned Customer::coupons_value(unsigned coupon_bits, unsigned inc)
+{
+    unsigned total_value = 0;
+    for (
+            unsigned val = inc;
+            coupon_bits;
+            val += inc, coupon_bits >>= 1
+            )
+    {
+        if (coupon_bits & 1) {
+            total_value += val;
+        }
+    }
+    return total_value;
+}
+
+unsigned Customer::coupon_bits() const
+{
+    return __coupon_bits;
+}
+
+unsigned Customer::coupon_count() const
+{
+    return bit_count(__coupon_bits);
+}
+
+float Customer::operator ~ () const
 {
     return __expenditure;
 }
@@ -50,27 +116,27 @@ bool Customer::registered_id() const
     return __id != invalid_id;
 }
 
-const Inventory* Customer::inventory() const
+const Products* Customer::inventory() const
 {
-    return __inventory;
+    return __products_info;
 }
 
-void Customer::update_inventory(Inventory* inventory)
+void Customer::update_inventory(Products* inventory)
 {
-    __inventory = inventory;
+    __products_info = inventory;
 }
 
 /* Cart */
 Customer& Customer::operator << (const std::string& product_name)
 {
     req(registered_id());
-    req(__inventory != nullptr);
+    req(__products_info != nullptr);
 
-    __shopping_cart.push_back(product_name); // maybe alias +=
+    __shopping_cart.push_back(product_name);
 
-    Product temp(product_name); // declared just to access price
-    req(__inventory->find(temp) != __inventory->end(), "Product is not in the inventory.");
-    spend((*__inventory)[temp].price);
+    req(__products_info->find(product_name) != __products_info->end(), "Product is not in the inventory.");
+    spend((*__products_info)[product_name].price); // here ++
+    ++((*__products_info)[product_name]); // inc nr of purchases
 
     return *this;
 }
@@ -78,23 +144,23 @@ Customer& Customer::operator << (const std::string& product_name)
 const Customer& Customer::operator += (const Customer& other)
 {
     req(other.registered_id());
-    req(other.__inventory != nullptr, "[Debug]"); // delete_me
+    req(other.__products_info != nullptr, "[Debug]");
 
     if (!registered_id()) {
         __id = other.__id;
 
-        if (__inventory == nullptr) {
-            __inventory = other.__inventory;
+        if (__products_info == nullptr) {
+            __products_info = other.__products_info;
         }
     }
 
-    req(__inventory != nullptr, "[Debug]"); // delete_me
+    req(__products_info != nullptr, "[Debug]");
 
     /* Append only if it's same customer. */
     if (id() == other.id()) {
         __shopping_cart  +=  other.__shopping_cart;
         __expenditure    +=  other.__expenditure;
-        __cupon          +=  other.__cupon;
+        __coupon_bits     |=  other.__coupon_bits;
     }
     else {
         std::cout << "Diff. customers:"
@@ -123,7 +189,7 @@ std::ostream& operator << (std::ostream& out, const Customer& customer)
 
 std::istream& operator >> (std::istream& in, Customer& customer)
 {
-    req(customer.__inventory != nullptr);
+    req(customer.__products_info != nullptr);
 
     std::string product_name;
     int current_customer_id;
@@ -141,3 +207,6 @@ std::istream& operator >> (std::istream& in, Customer& customer)
 
     return in;
 }
+
+
+/* Coupons */

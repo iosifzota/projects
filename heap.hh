@@ -74,7 +74,7 @@ void heap<T, Compare>::pop()
 template< typename T, class Compare >
 const T& heap<T, Compare>::top() const
 {
-    req(data.size(), "Trying to access empty heap.");
+    req(!data.empty(), "Trying to access empty heap.");
 
     return data[0];
 }
@@ -161,7 +161,7 @@ void heap<T, Compare>::sort_inplace()
 template< typename T, class Compare >
 bool heap<T, Compare>::empty() const
 {
-    return data.size() == 0;
+    return data.empty();
 }
 
 /* Data access. */

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <limits>
+#include <random>
 
 #include "req.hh"
 #include "utility.hh"
@@ -8,30 +9,37 @@
 #include "hashes.hh"
 
 #include "product.hh"
+#include "products_order.hh"
 #include "customer.hh"
+#include "customers_order.hh"
+#include "heap.hh"
 
 #if  defined (__GNUC__) || defined(__GNUG__)
 #define SHOPPINGS_FILE "../input/shoppings.txt"
 #define INVENTORY_FILE "../input/inventory.txt"
 #else
 #define SHOPPINGS_FILE "shoppings.txt"
-#define INVENTORY_FILE "../input/inventory.txt"
+#define INVENTORY_FILE "inventory.txt"
 #endif
 
-void process_shoppings(std::ifstream&, Inventory&, Customers&);
-void process_inventory(std::ifstream&, Inventory&);
-void process_stats(std::ostream&, Inventory&, Customers&);
+#define OUTPUT_FILE "output_data.txt"
+
+void process_shoppings(std::ifstream&, Products&, Customers&);
+void process_stats_and_apply_coupons(std::ostream&, Products&, Customers&);
+std::istream& operator >> (std::istream&, Products&);
 
 int main()
 {
     std::ifstream input_data;
-    Inventory products;
+    std::ofstream output_data;
+
+    Products products;
     Customers customers;
 
     input_data.open(INVENTORY_FILE);
     req(input_data.good(), "Could not open file" INVENTORY_FILE);
     /* */
-    process_inventory(input_data, products);
+    input_data >> products;
     input_data.close();
 
     input_data.open(SHOPPINGS_FILE);
@@ -40,53 +48,117 @@ int main()
     process_shoppings(input_data, products, customers);
     input_data.close();
 
-    process_stats(std::cout, products, customers);
+    output_data.open(OUTPUT_FILE);
+    req(output_data.good());
+
+    process_stats_and_apply_coupons(output_data, products, customers);
+    output_data.close();
+
+    std::cout << "Output written to ";
+    print_green(OUTPUT_FILE);
+    std::cout << ".\n";
 
     return 0;
 }
 
-void process_stats(std::ostream& out, Inventory& products, Customers& customers)
-{
-    // sort using priority_queue
 
-    for (const auto& product : products) {
-        out << product.first << '\n';
+
+void process_stats_and_apply_coupons(std::ostream& out, Products& products, Customers& customers)
+{
+    const unsigned coupon_base_val = 20;
+
+    /* Calculate total coupons count and value; and apply coupons. */
+    unsigned total_coupon_count{}, total_coupon_value{};
+
+
+
+    for (auto& customer : customers) {
+        unsigned coupon_bits = customer.second.coupon_bits();
+        customer.second.apply_coupons(coupon_base_val);
+
+        total_coupon_count += Customer::bit_count(coupon_bits);
+        total_coupon_value += Customer::coupons_value(coupon_bits, coupon_base_val);
     }
+
+    /* Calculate remaining coupons count and value. */
+    unsigned remaining_coupon_count{}, remaining_coupon_value{};
 
     for (const auto& customer : customers) {
-        out << customer.second << '\n';
+        unsigned coupon_bits = customer.second.coupon_bits();
+
+        remaining_coupon_count += Customer::bit_count(coupon_bits);
+        remaining_coupon_value += Customer::coupons_value(coupon_bits, coupon_base_val);
     }
+
+    /* Effective = Total - Remaining. */
+    unsigned effective_coupon_count, effective_coupon_value;
+    effective_coupon_count = total_coupon_count - remaining_coupon_count;
+    effective_coupon_value = total_coupon_value - remaining_coupon_value;
+
+    std::cout << '\n';
+          out << '\n';
+
+    print_green("Products ordered by shop's net income:\n");
+    std::cout << products << '\n'; // Sorted decreasing by shop's net income.
+          out << "Product ordered by shop's net income:\n" << products << '\n';
+
+    print_green("Customers ordered by expenditure:\n");
+    std::cout << customers << '\n'; // Sorted decreasing by expenditure.
+          out << "Customer ordered by expenditure:\n" << customers << '\n';
+
+    /* Print coupon stats */
+    print_green("Coupons Stats\n");
+    out << "Coupons Stats\n";
+
+    std::cout << "Total coupons count: " << total_coupon_count << '\n';
+          out << "Total coupons count: " << total_coupon_count << '\n';
+    std::cout << "Total coupons value: " << total_coupon_value << '\n';
+          out << "Total coupons value: " << total_coupon_value << '\n';
+
+    std::cout << "Effective coupons count: " << effective_coupon_count << '\n';
+          out << "Effective coupons count: " << effective_coupon_count << '\n';
+    std::cout << "Effective coupons value: " << effective_coupon_value << "\n\n";
+          out << "Effective coupons value: " << effective_coupon_value << "\n\n";
 }
 
-void process_inventory(std::ifstream& invetory, Inventory& products)
+std::istream& operator >> (std::istream& invetory_data, Products& products)
 {
     const char comment_sign = ';';
     char first_char;
 
-    while ((first_char = invetory.peek()) != EOF) {
+    while ((first_char = invetory_data.peek()) != EOF) {
 
         /* Ignore comment lines, trailing '\n'. */
         if (first_char == comment_sign || first_char == '\n') {
-            skip_istream(invetory, "\n");
+            skip_istream(invetory_data, "\n");
             continue;
         }
 
         Product temp_holder;
-        invetory >> temp_holder;
+        invetory_data >> temp_holder;
 
-        products[temp_holder] = temp_holder;
+        products[temp_holder.name] = temp_holder;  // here ++
     }
 
     /* Hash stats. */
-    std::cout << "Finished processing invetory!\n";
+    std::cout << "Finished processing inventory data!\n";
     std::cout << "Collisions: ";
     std::cout << products.collision_count() << '\n';
+
+    return invetory_data;
 }
 
-void process_shoppings(std::ifstream& shoppings, Inventory& products, Customers& customers)
+void process_shoppings(std::ifstream& shoppings, Products& products, Customers& customers)
 {
     const char comment_sign = ';';
     char first_char;
+
+    std::default_random_engine generator;
+    std::uniform_int_distribution<int> distribution(1, 12);
+    auto dice = std::bind( distribution, generator );
+
+    int lucky_number = dice();
+    int coupons_max_count = lucky_number / 2;
 
     while ((first_char = shoppings.peek()) != EOF) {
 
@@ -100,6 +172,11 @@ void process_shoppings(std::ifstream& shoppings, Inventory& products, Customers&
         shoppings >> temp_holder;
 
         customers[temp_holder.id()] += temp_holder;
+
+        int rand = dice();
+        if (rand == lucky_number) {
+            customers[temp_holder.id()].append_coupon(1 << coupons_max_count);
+        }
     }
 
     /* Hash stats. */
@@ -107,3 +184,6 @@ void process_shoppings(std::ifstream& shoppings, Inventory& products, Customers&
     std::cout << "Collisions: ";
     std::cout << customers.collision_count() << '\n';
 }
+
+
+
