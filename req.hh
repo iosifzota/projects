@@ -19,12 +19,6 @@ void print_green(const char *);
 #define req__two(test__condition, err__msg)  \
 	require((test__condition) ? (1) : (0), #test__condition, __FUNCTION__, __LINE__, err__msg)
 
-#define tst(test__condition) \
-	require((test__condition) ? (1) : (0), #test__condition, __FUNCTION__, __LINE__)
-
-#define etst(test__condition, err__msg)  \
-	require((test__condition) ? (1) : (0), #test__condition, __FUNCTION__, __LINE__, err__msg)
-
 static inline void fatal_print_begin(const char* assertion)
 {
 	printf("\n[ ");

@@ -135,7 +135,8 @@ Customer& Customer::operator << (const std::string& product_name)
     __shopping_cart.push_back(product_name);
 
     req(__products_info->find(product_name) != __products_info->end(), "Product is not in the inventory.");
-    spend((*__products_info)[product_name].price); // here ++
+
+    spend((*__products_info)[product_name].price);
     ++((*__products_info)[product_name]); // inc nr of purchases
 
     return *this;

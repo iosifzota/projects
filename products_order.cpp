@@ -2,7 +2,7 @@
 
 #include "products_order.hh"
 
-std::ostream& operator << (std::ostream& out, Products& products)
+std::ostream& operator << (std::ostream& out, Products& products) // products cannot be const because of init_state()
 {
     Stateful_Cmp_Products::init_state(&products);
     heap<std::string, Stateful_Cmp_Products> sorter;

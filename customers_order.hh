@@ -16,8 +16,8 @@ public:
     inline bool operator () (int, int) const;
 };
 
-/* Print customers */
-std::ostream& operator << (std::ostream& out, Customers& customers); // cannot be constant because of init_state
+/* Print customers in decreasing order of expenditure. */
+std::ostream& operator << (std::ostream& out, Customers& customers);
 
 #endif // !__customers_order_hh
 

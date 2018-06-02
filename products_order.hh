@@ -21,7 +21,7 @@ public:
 };
 
 /* Print products sorted by shop's net income. */
-std::ostream& operator << (std::ostream& out, Products& products); // cannot be constant because of init_state
+std::ostream& operator << (std::ostream& out, Products& products);
 
 #endif // !__products_order_hh
 

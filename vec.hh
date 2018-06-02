@@ -6,6 +6,7 @@
 #include <ostream>
 #include <initializer_list>
 #include <iostream>
+#include <algorithm>
 
 #include "req.hh"
 
@@ -50,10 +51,8 @@ namespace iz {
             vec(const T*, const T*);
             ~vec();
 
-            /* Copy constuctors */
             vec(const vec&);
             vec(std::initializer_list<T> l);
-            // -- constr from vec*
 
             /* Iterators */
             const T* begin() const {
@@ -78,9 +77,7 @@ namespace iz {
 
             /* vec <op> vec */
             inline const vec& operator = (const vec&);
-            // -- = *
             inline const vec& operator += (const vec&);
-            // -- += *
 
             /* I/O */
             friend std::istream& operator >> <>(std::istream&, vec<T, GROWTH>&);
@@ -88,7 +85,6 @@ namespace iz {
 
             /* Helpers. */
             static unsigned copy_raw(T* begin_dest, T* end_dest, const T* begin_src, const T* end_src);
-
     };
 
     template <typename T, unsigned GROWTH>
@@ -309,9 +305,6 @@ namespace iz {
     {
         reset_fields();
         resize(size);
-
-        // Maybe move end_ptr to begin_ptr + capacity
-        // DONE: similar resize
     }
 
     template<typename T, unsigned GROWTH>

@@ -2,7 +2,7 @@
 
 #include "customers_order.hh"
 
-std::ostream& operator << (std::ostream& out, Customers& customers)
+std::ostream& operator << (std::ostream& out, Customers& customers)  // customers cannot be const because of init_state()
 {
     Stateful_Cmp_Customers::init_state(&customers);
     heap<int, Stateful_Cmp_Customers> sorter;
@@ -13,7 +13,7 @@ std::ostream& operator << (std::ostream& out, Customers& customers)
 
     while (!sorter.empty()) {
         out << sorter.top() << ": "
-            << ~customers[sorter.top()] << '\n'; // hmm
+            << ~customers[sorter.top()] << '\n'; // ~ => expenditure
         sorter.pop();
     }
 
