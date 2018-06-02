@@ -23,8 +23,11 @@ add_executable(arr vec.cpp req.cpp)
 add_executable(btrees basic_btree.hh RB-node.hh rbtree.hh map.hh binary_trees.cpp req.hh req.cpp)
 add_executable(redblack basic_btree.hh RB-node.hh rbtree.hh req.hh req.cpp rb-tree.cpp)
 
-add_executable(hash hash_table.cpp hash_table.hh req.cpp)
-add_executable(test_hashes test_hashes.cpp hash_table.hh req.cpp)
+add_executable(hash hash_table.cpp hash_table.hh req.cpp utility.cpp)
+add_executable(test_hashes test_hashes.cpp hash_table.hh hashes.cpp utility.cpp req.cpp)
+
+# for poo
+add_executable(shop shop.cpp product.cpp customer.cpp utility.cpp hashes.cpp req.cpp)
 
 # add_executable(mat
 #     matrix.cpp
