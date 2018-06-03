@@ -5,8 +5,6 @@
 #include "hash_table.hh"
 #include "hashes.hh"
 
-using Products = iz::htable<std::string, Product, Djb_Hash>;
-
 class Stateful_Cmp_Products
 {
 private:

@@ -5,10 +5,6 @@
   hash< Key, Val, Hash >
   container:
   std::vector< std::list<Val> >;
-
-  [WAIT] methods:
-  delete_objs_also(Key)
-  delete_arrays_also(Key)
 */
 
 #include <utility>
@@ -30,7 +26,7 @@
 namespace iz {
 
 	template <typename Key, typename Hash = std::hash<Key> >
-	void print_hashed(const Key& key, unsigned size);
+	void print_hashed(const Key& key, size_t size);
 
 	/* Aliases */
 	template <typename Key, typename Val>
@@ -57,17 +53,17 @@ namespace iz {
 	class htable
 	{
 	private:
-		unsigned size;
-		unsigned base_size;
-		unsigned __collision_count;
-		unsigned __count;
+		size_t size;
+		size_t base_size;
+		size_t __collision_count;
+		size_t __count;
 
 	public:
 		/* TODO: move to private. */
 		static Hash hash;
 		buckets_vector<Key, Val> data;
 
-		htable(unsigned init_size = HTABLE_INIT_SIZE);
+		htable(size_t init_size = HTABLE_INIT_SIZE);
 
 		/* TODO: move out. */
 		htable(const htable& other);
@@ -78,7 +74,7 @@ namespace iz {
 
 		void remove(const Key&);
 
-		void resize(unsigned);
+		void resize(size_t);
 		void resize_up();
 		void resize_down();
 
@@ -86,12 +82,12 @@ namespace iz {
 		void map(std::function<void(ht_item<Key, Val>&)>);
 		void map(std::function<void(const ht_item<Key, Val>&)>) const;
 
-		unsigned load() const;
-		unsigned count() const;
+		size_t load() const;
+		size_t count() const;
 
 		/* Collision stats */
 		void reset_collision_count();
-		unsigned collision_count();
+		size_t collision_count();
 
 		/* Iterators */
 		class bucket_iterator
@@ -175,13 +171,13 @@ namespace iz {
 	};
 
 	template <typename Key, typename Val, typename Hash>
-	unsigned htable<Key, Val, Hash>::count() const
+	size_t htable<Key, Val, Hash>::count() const
 	{
 		return __count;
 	}
 
 	template <typename Key, typename Val, typename Hash>
-	unsigned htable<Key, Val, Hash>::collision_count()
+	size_t htable<Key, Val, Hash>::collision_count()
 	{
 		return __collision_count;
 	}
@@ -196,7 +192,7 @@ namespace iz {
 	Hash htable<Key, Val, Hash>::hash;
 
 	template <typename Key, typename Val, typename Hash>
-	htable<Key, Val, Hash>::htable(unsigned init_size)
+	htable<Key, Val, Hash>::htable(size_t init_size)
 	{
 		__collision_count = 0;
 
@@ -329,7 +325,7 @@ namespace iz {
 
 	/* */
 	template <typename Key, typename Val, typename Hash>
-	void htable<Key, Val, Hash>::resize(unsigned new_base_size)
+	void htable<Key, Val, Hash>::resize(size_t new_base_size)
 	{
 		base_size = new_base_size;
 		size = next_prime(base_size);
@@ -386,7 +382,7 @@ namespace iz {
 		dest.clear();
 		dest.resize(src.size());
 
-		for (unsigned bucket_index = 0; bucket_index < src.size(); ++bucket_index) {
+		for (size_t bucket_index = 0; bucket_index < src.size(); ++bucket_index) {
 			for (const auto& item : src[bucket_index]) {
 				dest[bucket_index].push_front(item);
 			}
@@ -397,7 +393,7 @@ namespace iz {
 
 	/* Calc. load */
 	template <typename Key, typename Val, typename Hash>
-	unsigned htable<Key, Val, Hash>::load() const
+	size_t htable<Key, Val, Hash>::load() const
 	{
 		return __count * 100 / size;
 	}
@@ -684,7 +680,7 @@ namespace iz {
 
 
 	template <typename Key, typename Hash>
-	void print_hashed(const Key& key, unsigned size)
+	void print_hashed(const Key& key, size_t size)
 	{
 		Hash hash;
 		size_t key_hash;
