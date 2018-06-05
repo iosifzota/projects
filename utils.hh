@@ -102,7 +102,7 @@ namespace iz {
 			second = other.second;
 		}
 
-		const pair& operator = (const pair& other) {
+		pair& operator = (const pair& other) {
 			first = other.first;
 			second = other.second;
 		}

@@ -63,7 +63,7 @@ namespace iz {
 		static Hash hash;
 		buckets_vector<Key, Val> data;
 
-		htable(size_t init_size = HTABLE_INIT_SIZE);
+		explicit htable(size_t init_size = HTABLE_INIT_SIZE);
 
 		/* TODO: move out. */
 		htable(const htable& other);
