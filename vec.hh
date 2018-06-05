@@ -11,7 +11,7 @@
 #include "req.hh"
 
 template <typename T>
-void new_req(T** ptr, unsigned blocks)
+void new_req(T** ptr, size_t blocks)
 {
     req(blocks, "Cannot allocate 0 blocks.");
     req(ptr != nullptr);
@@ -19,35 +19,35 @@ void new_req(T** ptr, unsigned blocks)
 }
 
 namespace iz {
-    template <typename T, unsigned GROWTH>
+    template <typename T, size_t GROWTH>
     class vec;
 
-    template <typename T, unsigned GROWTH>
+    template <typename T, size_t GROWTH>
     std::istream& operator >> (std::istream&, vec<T, GROWTH>&);
 
-    template <typename T, unsigned GROWTH>
+    template <typename T, size_t GROWTH>
     std::ostream& operator << (std::ostream&, const vec<T, GROWTH>&);
 
-    template<typename T, unsigned GROWTH = 5>
+    template<typename T, size_t GROWTH = 5>
     class vec
     {
         private:
             T* begin_ptr;
             T* end_ptr;
-            unsigned cap;
+            size_t cap;
 
             /* Memory management */
             inline void reset_fields();
-            T* alloc(unsigned);
-            T* realloc(unsigned);
+            T* alloc(size_t);
+            T* realloc(size_t);
 
-            static const unsigned realloc_factor;
-            inline unsigned calc_realloc_size() const;
+            static const size_t realloc_factor;
+            inline size_t calc_realloc_size() const;
 
         public:
             vec();
-            explicit vec(unsigned size);
-            vec(unsigned size, const T& fill_value);
+            explicit vec(size_t size);
+            vec(size_t size, const T& fill_value);
             vec(const T*, const T*);
             ~vec();
 
@@ -63,17 +63,17 @@ namespace iz {
             }
 
             /**/
-            inline void resize(unsigned);
+            inline void resize(size_t);
             inline void push_back(const T&);
 
             /* Access */
-            inline T& operator [] (unsigned);
-            inline const T& operator [] (unsigned) const;
+            inline T& operator [] (size_t);
+            inline const T& operator [] (size_t) const;
 
             /* Stats */
             inline bool empty() const;
-            inline unsigned size() const;
-            inline unsigned capacity() const;
+            inline size_t size() const;
+            inline size_t capacity() const;
 
             /* vec <op> vec */
             inline const vec& operator = (const vec&);
@@ -84,19 +84,19 @@ namespace iz {
             friend std::ostream& operator << <>(std::ostream&, const vec<T, GROWTH>&);
 
             /* Helpers. */
-            static unsigned copy_raw(T* begin_dest, T* end_dest, const T* begin_src, const T* end_src);
+            static size_t copy_raw(T* begin_dest, T* end_dest, const T* begin_src, const T* end_src);
     };
 
-    template <typename T, unsigned GROWTH>
-    const unsigned vec<T, GROWTH>::realloc_factor = 2;
+    template <typename T, size_t GROWTH>
+    const size_t vec<T, GROWTH>::realloc_factor = 2;
 
-    template <typename T, unsigned GROWTH>
-    unsigned vec<T, GROWTH>::calc_realloc_size() const
+    template <typename T, size_t GROWTH>
+    size_t vec<T, GROWTH>::calc_realloc_size() const
     {
         return capacity() + realloc_factor * (GROWTH + 1);
     }
 
-    template <typename T, unsigned GROWTH>
+    template <typename T, size_t GROWTH>
     void vec<T, GROWTH>::push_back(const T& value)
     {
         if (size() >= capacity()) {
@@ -107,8 +107,8 @@ namespace iz {
         ++end_ptr;
     }
 
-    template<typename T, unsigned GROWTH>
-    T* vec<T, GROWTH>::alloc(unsigned blocks)
+    template<typename T, size_t GROWTH>
+    T* vec<T, GROWTH>::alloc(size_t blocks)
     {
         req(begin_ptr == nullptr);
         req(end_ptr == nullptr);
@@ -122,11 +122,11 @@ namespace iz {
         return begin_ptr;
     }
 
-    template<typename T, unsigned GROWTH>
-    T* vec<T, GROWTH>::realloc(unsigned blocks)
+    template<typename T, size_t GROWTH>
+    T* vec<T, GROWTH>::realloc(size_t blocks)
     {
         T* new_storage;
-        unsigned new_size; // store the new size (!capacity)
+        size_t new_size; // store the new size (!capacity)
 
         req(blocks, "Cannot realloc 0 blocks.");
 
@@ -151,8 +151,8 @@ namespace iz {
         return begin_ptr;
     }
 
-    template<typename T, unsigned GROWTH>
-    unsigned vec<T, GROWTH>::copy_raw(        // end must be the ptr, after the last block
+    template<typename T, size_t GROWTH>
+    size_t vec<T, GROWTH>::copy_raw(        // end must be the ptr, after the last block
             T* begin_dest, T* end_dest,
             const T* begin_src, const T* end_src
             )
@@ -165,9 +165,9 @@ namespace iz {
         req(end_src != nullptr);
         req(begin_src <= end_src);
 
-        unsigned min_size = std::min(end_dest - begin_dest, end_src - begin_src);
+        size_t min_size = std::min(end_dest - begin_dest, end_src - begin_src);
 
-        for (unsigned i = 0; i < min_size; ++i)
+        for (size_t i = 0; i < min_size; ++i)
         {
             begin_dest[i] = begin_src[i];
         }
@@ -175,8 +175,8 @@ namespace iz {
         return min_size;
     }
 
-    template <typename T, unsigned GROWTH>
-    void vec<T, GROWTH>::resize(unsigned new_size)
+    template <typename T, size_t GROWTH>
+    void vec<T, GROWTH>::resize(size_t new_size)
     {
         req(new_size > 0);
         realloc(new_size);
@@ -188,8 +188,8 @@ namespace iz {
     }
 
     /* Meta */
-    template<typename T, unsigned GROWTH>
-    unsigned vec<T, GROWTH>::size() const
+    template<typename T, size_t GROWTH>
+    size_t vec<T, GROWTH>::size() const
     {
         if (empty()) {
             return 0;
@@ -197,13 +197,13 @@ namespace iz {
         return end_ptr - begin_ptr;
     }
 
-    template<typename T, unsigned GROWTH>
-    unsigned vec<T, GROWTH>::capacity() const
+    template<typename T, size_t GROWTH>
+    size_t vec<T, GROWTH>::capacity() const
     {
         return cap;
     }
 
-    template<typename T, unsigned GROWTH>
+    template<typename T, size_t GROWTH>
     bool vec<T, GROWTH>::empty() const
     {
         if (begin_ptr == nullptr) {
@@ -213,21 +213,21 @@ namespace iz {
     }
 
     /* Access. */
-    template<typename T, unsigned GROWTH>
-    T& vec<T, GROWTH>::operator [] (unsigned i)
+    template<typename T, size_t GROWTH>
+    T& vec<T, GROWTH>::operator [] (size_t i)
     {
         req(i < size(), "Trying to access out of bounds.");
         return begin_ptr[i];
     }
 
-    template<typename T, unsigned GROWTH>
-    const T& vec<T, GROWTH>::operator [] (unsigned i) const
+    template<typename T, size_t GROWTH>
+    const T& vec<T, GROWTH>::operator [] (size_t i) const
     {
         req(i < size(), "Trying to access out of bounds.");
         return begin_ptr[i];
     }
 
-    template <typename T, unsigned GROWTH>
+    template <typename T, size_t GROWTH>
     const vec<T, GROWTH>& vec<T, GROWTH>::operator += (const vec<T, GROWTH>& other)
     {
         if (other.empty()) {
@@ -242,7 +242,7 @@ namespace iz {
         return *this;
     }
 
-    template <typename T, unsigned GROWTH>
+    template <typename T, size_t GROWTH>
     const vec<T, GROWTH>& vec<T, GROWTH>::operator = (const vec<T, GROWTH>& other)
     {
         if (begin_ptr != nullptr) {
@@ -262,14 +262,14 @@ namespace iz {
         return *this;
     }
 
-    template<typename T, unsigned GROWTH>
+    template<typename T, size_t GROWTH>
     void vec<T, GROWTH>::reset_fields()
     {
         begin_ptr = end_ptr = nullptr;
         cap = 0;
     }
 
-    template<typename T, unsigned GROWTH>
+    template<typename T, size_t GROWTH>
     vec<T, GROWTH>::vec(const T* begin_arr, const T* end_arr) // end_arr must be the ptr, after the last block
     {
         req(begin_arr != nullptr);
@@ -282,38 +282,38 @@ namespace iz {
         copy_raw(begin_ptr, (end_ptr = begin_ptr + capacity()), begin_arr, end_arr);
     }
 
-    template<typename T, unsigned GROWTH>
+    template<typename T, size_t GROWTH>
     vec<T, GROWTH>::vec(const vec<T, GROWTH>& other)
     {
         reset_fields();
         *this = other;
     }
 
-    template<typename T, unsigned GROWTH>
-    vec<T, GROWTH>::vec(unsigned size, const T& fill_value)
+    template<typename T, size_t GROWTH>
+    vec<T, GROWTH>::vec(size_t size, const T& fill_value)
     {
         reset_fields();
         alloc(size);
 
-        for (unsigned i = 0; i < size; ++i) {
+        for (size_t i = 0; i < size; ++i) {
             push_back(fill_value);
         }
     }
 
-    template<typename T, unsigned GROWTH>
-    vec<T, GROWTH>::vec(unsigned size)
+    template<typename T, size_t GROWTH>
+    vec<T, GROWTH>::vec(size_t size)
     {
         reset_fields();
         resize(size);
     }
 
-    template<typename T, unsigned GROWTH>
+    template<typename T, size_t GROWTH>
     vec<T, GROWTH>::vec()
     {
         reset_fields();
     }
 
-    template<typename T, unsigned GROWTH>
+    template<typename T, size_t GROWTH>
     vec<T, GROWTH>::vec(std::initializer_list<T> l)
     {
         reset_fields();
@@ -323,7 +323,7 @@ namespace iz {
         }
     }
 
-    template<typename T, unsigned GROWTH>
+    template<typename T, size_t GROWTH>
     vec<T, GROWTH>::~vec()
     {
         if (begin_ptr != nullptr) {
@@ -331,7 +331,7 @@ namespace iz {
         }
     }
 
-    template <typename T, unsigned GROWTH>
+    template <typename T, size_t GROWTH>
     std::istream& operator >> (std::istream& in, vec<T, GROWTH>& arr)
     {
         T temp;
@@ -343,7 +343,7 @@ namespace iz {
     }
 
 
-    template <typename T, unsigned GROWTH>
+    template <typename T, size_t GROWTH>
     std::ostream& operator << (std::ostream& out, const vec<T, GROWTH>& arr)
     {
         for (auto itr : arr) {
