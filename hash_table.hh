@@ -65,7 +65,6 @@ namespace iz {
 
 		explicit htable(size_t init_size = HTABLE_INIT_SIZE);
 
-		/* TODO: move out. */
 		htable(const htable& other);
 
 		Val& insert(const Key&, const Val&);
@@ -194,7 +193,6 @@ namespace iz {
 	template <typename Key, typename Val, typename Hash>
 	htable<Key, Val, Hash>::htable(size_t init_size)
 	{
-		__collision_count = 0;
 
 		if (init_size < HTABLE_INIT_SIZE) {
 			base_size = HTABLE_INIT_SIZE;
@@ -203,15 +201,24 @@ namespace iz {
 			base_size = init_size;
 		}
 
+		/* TODO: make a function out of these 4 lines. */
 		size = next_prime(base_size);
 		data.resize(size);
 
+		__collision_count = 0;
 		__count = 0;
 	}
 
 	template <typename Key, typename Val, typename Hash>
 	htable<Key, Val, Hash>::htable(const htable& other)
 	{
+		base_size = HTABLE_INIT_SIZE;
+		size = next_prime(base_size);
+		data.resize(size);
+
+		__collision_count = 0;
+		__count = 0;
+
 		other.map([&](const ht_item<Key, Val>& item) {
 			insert(item.first, item.second);
 		});
