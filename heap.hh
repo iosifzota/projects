@@ -30,23 +30,23 @@ public:
      * Fix heap property from current index down,
      * assuming left and right subtrees are heaps.
      */
-    unsigned sift_down(unsigned);
+    size_t sift_down(size_t);
 
     /*
      * Modify value at the given index.
      * Go up the heap to the final index of value.
      */
-    unsigned sift_up(unsigned, T);
+    size_t sift_up(size_t, T);
 
     const T& top() const;
     void pop();
-    unsigned push(T);
+    size_t push(T);
     bool empty() const;
 
     void sort_inplace();
 
-    inline T& operator [] (unsigned);
-    inline const T& operator [] (unsigned) const;
+    inline T& operator [] (size_t);
+    inline const T& operator [] (size_t) const;
 
     friend std::istream& operator >> <T, Compare>(std::istream&, heap<T, Compare>&);
     friend std::ostream& operator << <T, Compare>(std::ostream&, const heap<T, Compare>&);
@@ -81,21 +81,22 @@ const T& heap<T, Compare>::top() const
 
 
 template< typename T, class Compare >
-unsigned heap<T, Compare>::push(T val)
+size_t heap<T, Compare>::push(T val)
 {
     data.push_back(val);
     return sift_up(data.size() - 1, val);
 }
 
+/* TODO: Cleanup. */
 template< typename T, class Compare >
-unsigned heap<T, Compare>::sift_up(unsigned i, T val)
+size_t heap<T, Compare>::sift_up(size_t i, T val)
 {
     req(i < data.size(), "Trying o access array out of bounds.");
 
-    int parent_index, current_index;
+    size_t parent_index, current_index;
 
     /* sift_UP */
-    if (cmp(val, data[i])) {
+    if (cmp(val, data[i]) || i < 1) {
         return i;
     }
 
@@ -108,7 +109,7 @@ unsigned heap<T, Compare>::sift_up(unsigned i, T val)
     for (
         parent_index = (current_index - 1) / 2;
         current_index != parent_index && cmp(data[parent_index], val);
-        current_index  = parent_index, parent_index = (current_index - 1) / 2
+        current_index  = parent_index, parent_index = (parent_index == 0) ? 0 : (current_index - 1) / 2
         )
     {
         data[current_index] = data[parent_index];
@@ -119,9 +120,9 @@ unsigned heap<T, Compare>::sift_up(unsigned i, T val)
 }
 
 template< typename T, class Compare >
-unsigned heap<T, Compare>::sift_down(unsigned i)
+size_t heap<T, Compare>::sift_down(size_t i)
 {
-    unsigned left, right, max;
+    size_t left, right, max;
 
     req(i < data.size(), "Trying o access array out of bounds.");
 
@@ -166,7 +167,7 @@ bool heap<T, Compare>::empty() const
 
 /* Data access. */
 template< typename T, class Compare >
-T& heap<T, Compare>::operator [] (unsigned i)
+T& heap<T, Compare>::operator [] (size_t i)
 {
     req(i < data.size(), "Trying to access array out of bounds!");
 
@@ -174,7 +175,7 @@ T& heap<T, Compare>::operator [] (unsigned i)
 }
 
 template< typename T, class Compare >
-const T& heap<T, Compare>::operator [] (unsigned i) const
+const T& heap<T, Compare>::operator [] (size_t i) const
 {
     req(i < data.size(), "Trying to access array out of bounds!");
 
