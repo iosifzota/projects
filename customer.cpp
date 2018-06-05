@@ -1,3 +1,4 @@
+#include <iomanip>
 #include "customer.hh"
 
 Customer::Customer()
@@ -9,7 +10,7 @@ Customer::Customer()
 { ; }
 
 
-Customer::Customer(Products* inventory, int id, float expenditure, unsigned coupon_bits)
+Customer::Customer(Products* inventory, int32_t id, float expenditure, unsigned coupon_bits)
     :
     __id { id },
     __expenditure { expenditure },
@@ -29,7 +30,7 @@ Customer::Customer(const Customer& other)
 { ; }
 
 /* Helpers */
-const int Customer::invalid_id = -1;
+const int32_t Customer::invalid_id = -1;
 const float Customer::no_expenditure = 0;
 const unsigned Customer::no_coupon = 0;
 
@@ -106,7 +107,7 @@ void Customer::spend(float ammount)
     __expenditure += ammount;
 }
 
-int Customer::id() const
+int32_t Customer::id() const
 {
     return __id;
 }
@@ -175,17 +176,21 @@ const Customer& Customer::operator += (const Customer& other)
 std::ostream& operator << (std::ostream& out, const Customer& customer)
 {
     req(customer.registered_id());
+	req(customer.__products_info != nullptr, "[Debug]");
 
-    out << customer.__id
-        << '('
-        << customer.__shopping_cart.size()
-        << "):\n";
+	out << customer.__id << ": " << std::setw(3) << ~customer;
 
+	float expense_without_coupons{};
+
+	out << "    { ";
     for (const auto& product_name : customer.__shopping_cart) {
         out << product_name << ' ';
+		req(customer.__products_info->find(product_name) != customer.__products_info->end());
+		expense_without_coupons += (*(customer.__products_info))[product_name].price;
     }
+	out << " } :: Discount: " << expense_without_coupons - ~customer;
 
-    return out << "\tTotal: " << customer.__expenditure << '\n';
+	return out << "\n";
 }
 
 std::istream& operator >> (std::istream& in, Customer& customer)
@@ -193,7 +198,7 @@ std::istream& operator >> (std::istream& in, Customer& customer)
     req(customer.__products_info != nullptr);
 
     std::string product_name;
-    int current_customer_id;
+    int32_t current_customer_id;
 
     req(in >> current_customer_id);
 

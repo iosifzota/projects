@@ -31,7 +31,7 @@ void process_shoppings(std::ifstream&, Products&, Customers&);
 void process_stats_and_apply_coupons(std::ostream&, Products&, Customers&);
 
 /*
-Programul prelucreaza niste cumparaturi aplincand aleator cupoane cumparatorilor.
+Programul prelucreaza niste cumparaturi aplicand aleator cupoane cumparatorilor.
 Apoi se afiseaza clientii in ordine dupa suma cheltuita (tinand cont de cupoanele primite),
 produsele in ordinea profitului net al "magazinului".
 

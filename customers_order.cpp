@@ -5,15 +5,14 @@
 std::ostream& operator << (std::ostream& out, Customers& customers)  // customers cannot be const because of init_state()
 {
     Stateful_Cmp_Customers::init_state(&customers);
-    heap<int, Stateful_Cmp_Customers> sorter;
+    heap<int32_t, Stateful_Cmp_Customers> sorter;
 
     for (const auto& id_info : customers) {
         sorter.push(id_info.first);
     }
 
     while (!sorter.empty()) {
-        out << sorter.top() << ": "
-            << ~customers[sorter.top()] << '\n'; // ~ => expenditure
+        out << customers[sorter.top()] << '\n';
         sorter.pop();
     }
 

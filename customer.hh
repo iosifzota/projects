@@ -1,6 +1,8 @@
 #ifndef __customer_hh
 #define __customer_hh
 
+#include <cstddef>
+
 #include "vec.hh"
 #include "product.hh"
 #include "hash_table.hh"
@@ -14,7 +16,7 @@ using Customers = iz::htable<uint32_t, Customer, Jenkins_Hash32>;
 class Customer
 {
 private:
-    int __id;
+    int32_t __id;
     Shopping_Cart __shopping_cart;
     Products* __products_info; // external state
 
@@ -22,13 +24,13 @@ private:
     unsigned __coupon_bits;
 
     /* Helpers */
-    static const int invalid_id;
+    static const int32_t invalid_id;
     static const float no_expenditure;
     static const unsigned no_coupon;
 
 public:
     Customer();
-    explicit Customer(Products*, int = invalid_id, float = no_expenditure, unsigned = no_coupon);
+    explicit Customer(Products*, int32_t = invalid_id, float = no_expenditure, unsigned = no_coupon);
 
     Customer(const Customer&);
 
@@ -47,7 +49,7 @@ public:
     const Products* inventory() const;
 
     /* Id */
-    int id() const;
+    int32_t id() const;
     bool registered_id() const;
 
     float operator ~ () const;
