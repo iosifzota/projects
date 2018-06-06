@@ -1,0 +1,71 @@
+* POO
+** Homework
+   DEADLINE: <2018-06-02 Sat>
+*** Requirements
+    - [ Done ] Sa contina o clasa care are un membru alocat dinamic, iar acel membru sa fie alocat dinamic.
+    - [ Done ] Sa existe 4 operatori pentru clasa, dintre care una sa fie de intrare (>>) si alta de iesire (<<).
+    - [ Done ] Clasa sa aiba minim: un constructor implicit, unul cu parametrii, unul de copiere si destructor
+    - [ Done ] Variabila membra statica
+    - [ Done ] Functie membra statica.
+    - [ Done ] Sa existe citire din fisier
+    - [ Done ] Scriere in fisier
+    - [ Done ] Sortare eficienta.
+    - [ Done ]Sa existe cel putin inca o problema practica folosind clasa, in afara de sortare.
+*** Idea1
+    state:
+    workers: htable<worker, team>
+    tasks: htable<task, team>
+
+    input:
+    Each worker get's assigned one/more task(s). One task can be assigned to multiple workers.
+    1) Find teammates.  task => team: [] worker
+    2) Calculate each team potential: If potential (avg teamwork_solo_ratio) is lower than < 0.5 => expulse, lowest ratio worker, until > 0.5.
+    3) Remove each worker from the teams he contributes least (size, ratio).
+
+    4) Each worker is assigned  1/1 * (1 - (team_ratio - worker_ratio)) % payday
+    5) Sort each workers by income
+
+    worker:
+    - todo: [] task;  // task:: sturct { deadline: size_t | time_cost: size_t,  payday: float (maybe...) }
+    - teammates: [] worker;
+    - name
+    - age
+    - teamwork_solo_ratio: float  ( high = teamworker, medium = avg, low = sad wolf )  (0, 1)
+*** DONE Idea2
+[ Done ] product :: struct {
+	unique_name: std::string
+        price: size_t
+        shop_profit: size_t
+}
+[ Done ] product_stats :: struct : product {
+	how_manny_customers: size_t
+        total_cost(): size_t
+        total_profit(): size_t
+}
+
+customer :: struct {
+	customer_id: size_t
+
+        products :: [] product
+
+        cupon: size_t
+        
+        __expenditure: size_t
+        operator ~: size_t => __expenditure
+        spend(price: size_t)
+}
+
+Input:
+- [ Done ] customer_id, products
+
+Global State:
+- [ Done ] products_stats : htable<product_name, product_stats>
+- [ Done ] customers : htable<customer_id, customer>
+
+- pool :: [] customer_id (contiguous -> insert with push_back only)
+
+Output:
+- [ Done ] customers *ordered* by expenditure (decreasing)
+- [ Done ] products ordered by shop's net income (decreasing)
+
+- how manny cupons were offered, and what was their total value -> how much of that was in use.
