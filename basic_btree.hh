@@ -92,7 +92,7 @@ namespace iz {
                     std::weak_ptr<T_Node> current;
 
                 public:
-                    const_iterator(shared<T_Node> begin = NIL);
+                    explicit const_iterator(shared<T_Node> begin = NIL);
 
                     const_iterator& operator ++ ();
                     const_iterator operator ++ (int);
@@ -129,6 +129,9 @@ namespace iz {
 
 			void print_tree(unsigned short);
 
+            /* TODO: fix return type
+             * TODO: define copy contructor.
+             */
 			void operator = (basic_btree& other);
 
             /* Interface. */

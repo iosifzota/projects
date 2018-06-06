@@ -21,22 +21,22 @@ public:
     static const float invalid_price, invalid_profit;
 
     Product();
-
     explicit Product(const std::string&, float = invalid_price, float = invalid_profit);
 
     bool operator == (const Product&) const;
     bool operator != (const Product&) const;
 
-    friend std::ostream& operator << (std::ostream&, const Product&);
-    friend std::istream& operator >> (std::istream&, Product&);
-
     const Product& operator = (const Product&);
+
+	friend std::ostream& operator << (std::ostream&, const Product&);
+	friend std::istream& operator >> (std::istream&, Product&);
 
     /* Product stats */
     float gross() const;
     float net() const;
     size_t purchases() const;
 
+	/* Inc numberof_purchases */
     Product& operator ++ ();
 
 private:

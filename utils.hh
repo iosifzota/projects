@@ -66,7 +66,7 @@ std::ostream& operator << (std::ostream& out, const std::vector<T>& v)
 }
 
 template<typename T>
-void swap (std::vector<T>& v, unsigned i, unsigned j)
+void swap (std::vector<T>& v, size_t i, size_t j)
 {
     T aux;
     aux = v[i];
@@ -102,7 +102,7 @@ namespace iz {
 			second = other.second;
 		}
 
-		const pair& operator = (const pair& other) {
+		pair& operator = (const pair& other) {
 			first = other.first;
 			second = other.second;
 		}

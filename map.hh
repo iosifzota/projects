@@ -82,7 +82,7 @@ namespace iz {
 			using base_iterator::current;
 
 		public:
-			forward_iterator(shared_map_node<Key, Val> begin_root = NIL);
+			explicit forward_iterator(shared_map_node<Key, Val> begin_root = NIL);
 
 			forward_iterator& operator ++ ();
 			forward_iterator operator ++ (int);
@@ -97,7 +97,7 @@ namespace iz {
 			using base_iterator::current;
 
 		public:
-			reverse_iterator(shared_map_node<Key, Val> begin_root = NIL);
+			explicit reverse_iterator(shared_map_node<Key, Val> begin_root = NIL);
 
 			reverse_iterator& operator ++ ();
 			reverse_iterator operator ++ (int);

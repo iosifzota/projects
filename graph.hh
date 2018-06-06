@@ -139,13 +139,6 @@ void Graph<N, Edge_meta, Key, Hash, Pred>::read_nodes(std::istream& in)
 {
         Key node_key;
 
-        {
-                int c = in.peek();
-                c++; // disable warning.
-                if (in.eof())
-                        return;
-        }
-
         /* Read graph nodes. */
         while (in >> node_key) {
                 req(in >> nodes[node_key], "Not enough input.");
@@ -157,13 +150,6 @@ generic(N, Edge_meta, Key, Hash, Pred)
 void Graph<N, Edge_meta, Key, Hash, Pred>::read_edges(std::istream& in)
 {
         Key begin_key, end_key;
-
-        {
-                int c = in.peek();
-                c++; // disable warning.
-                if (in.eof())
-                        return;
-        }
 
         /* Read graph nodes. */
         while (in >> begin_key) {
