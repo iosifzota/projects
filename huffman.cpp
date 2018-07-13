@@ -1,278 +1,305 @@
-#include <fstream>
-#include <vector>
 #include <sstream>
 #include <memory>
 #include <iostream>
+#include <functional>
+#include <stack>
+#include <utility>
+
+using std::make_shared;
+using std::string;
+using std::greater;
+using std::stack;
 
 #include "freq.hh"
-#include "utils.hh"
 #include "req.hh"
 
 #include "priority_queue.hh"
 
-/* Used for comparison. => Will result in a min-queue. */
-struct Greater {
-        bool operator() (const std::shared_ptr<h_char>& lhs, const std::shared_ptr<h_char>& rhs) {
-                return lhs->freq > rhs->freq;
+namespace std {
+    template <>
+    struct greater<sptr<hchar_t>>
+    {
+        bool operator() (const sptr<hchar_t>& lhs, const sptr<hchar_t>& rhs) {
+            return lhs->freq > rhs->freq;
         }
-};
+    };
+}
+using min_heap = priority_queue< sptr<hchar_t>, greater<sptr<hchar_t>> >;
 
-/* Given a file_path returns a vector of h_char nodes. */
-priority_queue< std::shared_ptr<h_char>, Greater> read_file(const char* file_path);
+namespace huffman {
+    class huff_tree
+    {
+        private:
+            sptr<hchar_t> root;
+        public:
+            huff_tree(min_heap&);
+            huff_tree(const char *file_path);
 
-/* Create h_char vector from frequencies vector. */
-priority_queue< std::shared_ptr<h_char>, Greater> create_freqs(const std::vector<unsigned>& freq);
+            vec<string> create_codes();
+            void get_codes(vec<string>& codes) const;
 
-class huff_tree
-{
-public:
+            string decode(string) const;
+    };
 
-        /* Create tree from an ordered h_char vector. */
-        void create_tree(priority_queue< std::shared_ptr<h_char>, Greater>&);
-        void create_tree_from_file(const char *file_path);
+    min_heap get_nodes(const char* file_path);
+    static inline min_heap get_nodes(const vec<size_t>& freq);
 
-        std::string decode(std::string);
+    void create_tree(sptr<hchar_t>& root, const char *file_path);
+    static inline void create_tree(sptr<hchar_t>& root, min_heap&);
 
-        std::vector<std::string> create_codes();
-        void cc_body(
-                std::vector <std::string>& codes,
-                const std::shared_ptr<h_char>& current_node,
-                char cc, std::string& code);
-
-private:
-        std::shared_ptr<h_char> root;
-};
-
-std::string encode(const char* file_path, const std::vector<std::string>& codes);
-
-int test_huffman();
-
-int main() {
-        test_huffman();
+    string encode(const char* file_path, const vec<string>& codes);
 }
 
-#define input_file_name "huff.txt"
-#define input_dir "../input/"
+using huffman::huff_tree;
+using huffman::encode;
 
-#if  defined (__GNUC__) || defined(__GNUG__)
-      #define input_file input_dir input_file_name
-#else
-      #define input_file input_file_name
-#endif
+constexpr char input_file[] = "../input/huff.txt";
 
 int test_huffman()
 {
-        huff_tree hf;
-
         std::cout << input_file << '\n';
+        huff_tree hf(input_file);
 
-        /* Create huff_tree. */
-        hf.create_tree_from_file(input_file);
+        vec<string> codes = hf.create_codes();
 
-        /* Create vector of prefix codes for the characters. */
-        std::vector<std::string> codes = hf.create_codes();
-
-        /* Print out the code for each character. */
-        for (unsigned char c = 0; c < codes.size(); ++c)
+        for (size_t c = 0; c < codes.size(); ++c)
                 if (!codes[c].empty())
                         std::cout << c << ": " << codes[c] << "\n\n";
 
-        /* Encode the text. */
-        std::string encoding = encode(input_file, codes);
+        string encoding = encode(input_file, codes);
         std::cout << "Encoded:\n" << encoding; 	nn(2);
 
-        /* Decode the text. */
-        std::string decoding = hf.decode(encoding);
+        string decoding = hf.decode(encoding);
         std::cout << "Decoded:\n" << decoding; 	nn(2);
 
         return 0;
 }
 
-std::string huff_tree::decode(std::string encoding)
-{
-        std::string decoding;
-        std::shared_ptr<h_char> itr;
+int main() {
+        test_huffman();
+}
 
-        unsigned pos = 0;
+
+namespace huffman {
+
+    string huff_tree::decode(string encoding) const
+    {
+        string decoding;
+        sptr<hchar_t> itr;
+        size_t pos;
 
         req(root != nullptr, "Null tree.");
 
+        pos = 0;
         while (pos < encoding.size()) {
 
-                itr = root;
-                req(encoding[pos++] == '0', "Every char code must start with 0.");
+            itr = root;
+            req(encoding[pos++] == '0', "Every char code must start with 0.");
 
-                /* Follow the bits left and right through the tree. */
-                while (pos < encoding.size() && itr->c == 0) {
-                        if (encoding[pos] == '0') {
-                                itr = itr->left;
-                        }
-                        else if (encoding[pos] == '1') {
-                                itr = itr->right;
-                        }
-                        else {
-                                std::cerr << "[Error] Unexpected symbol: " << encoding[pos] << std::endl;
-                                exit(-1);
-                        }
-
-                        req(itr != nullptr, "Undefined char code. [Debug]");
-                        ++pos;
+            /* 0 = take left; 1 = take right */
+            while (pos < encoding.size() && itr->c == 0) {
+                if (encoding[pos] == '0') {
+                    itr = itr->left;
+                }
+                else if (encoding[pos] == '1') {
+                    itr = itr->right;
+                }
+                else {
+                    std::cerr << "[Error] Unexpected symbol: " << encoding[pos] << std::endl;
+                    exit(-1);
                 }
 
-                req(itr->c != 0, "Read incomplete char code.");
+                req(itr != nullptr, "Undefined char code. [Debug]");
+                ++pos;
+            }
 
-                decoding.push_back(itr->c);
+            req(itr->c != 0, "Read incomplete char code.");
+
+            decoding.push_back(itr->c);
         }
 
         return decoding;
-}
+    }
 
-std::string encode(const char* file_path, const std::vector<std::string>& codes)
-{
-        std::ifstream in(file_path);
+    vec<string> huff_tree::create_codes()
+    {
+        constexpr size_t size = MAX_UTF16;
+        vec<string> codes(size);
 
-        std::string encoding;
+        get_codes(codes);
+        return codes;
+    }
 
-        int c;
+    huff_tree::huff_tree(const char *file_path)
+    {
+        create_tree(root, file_path);
+    }
 
-        while ((c = in.get()) != EOF) {
-		req( (c) < (long)codes.size(), "Tring to access vector out of bounds.[Debug]");
+    huff_tree::huff_tree(min_heap& p)
+    {
+        create_tree(root, p);
+    }
 
-                for (const auto& c_index : codes[c]) {
-                        encoding.push_back(c_index);
-                }
+    /* Helpers */
+    min_heap get_nodes(const vec<size_t>& freq)
+    {
+        min_heap hchar_nodes;
+
+        auto size = freq.size();
+        req(size <= MAX_UTF16 + 1, "freq.size exceeds max number of uft16 chars.");
+
+        for (size_t c = 0; c < size; ++c) {
+            req(c == (utf16)c, "Overflowed utf16. [Debug]");
+
+            if (freq[c]) {
+                hchar_nodes.push(make_shared<hchar_t>((utf16)c, freq[c]));
+            }
         }
-	nl;
 
-	return encoding;
-}
+        return hchar_nodes;
+    }
 
+    min_heap get_nodes(const char* file_path)
+    {
+        ifstream in(file_path);
 
-void huff_tree::create_tree(priority_queue< std::shared_ptr<h_char>, Greater>& data)
-{
-        std::shared_ptr<h_char> left_child, right_child, new_node;
+        req(in.good(), "Null input.");
+
+        vec<size_t> freq;
+        min_heap temp, hchar_nodes;
+
+        freq = find_freq(in); /*and*/ in.close();
+        hchar_nodes = get_nodes(freq);
+
+        return hchar_nodes;
+    }
+
+    void create_tree(sptr<hchar_t>& root, const char *file_path)
+    {
+        min_heap data = get_nodes(file_path);
+
+        /* Print nodes */
+        std::cout << "Printing...\n";
+        data.map([](const sptr<hchar_t>& ptr) {
+                std::cout << "'" << ptr->c << "'" << ": " << ptr->freq << '\t';
+                });
+
+        create_tree(root, data);
+    }
+
+    void create_tree(sptr<hchar_t>& root, min_heap& data)
+    {
+        sptr<hchar_t> left_child, right_child, new_node;
 
         req(!data.empty(), "Empty queue.");
 
         while (!data.empty()) {
-                right_child = data.top();
-                data.pop();
+            right_child = data.top(); /*and*/ data.pop();
 
-                /* Will be proced when there's only one element. */
-                if (data.empty()) {
-                        break;
-                }
+            /* Leave after popping the last element. */
+            if (data.empty()) {
+                break;
+            }
 
-                left_child = data.top();
-                data.pop();
+            left_child = data.top(); /*and*/ data.pop();
 
-                /* Create new parent. */
-                new_node = std::make_shared<h_char>(
-                        (char)0,
-                        right_child->freq + left_child->freq,
-                        left_child,
-                        right_child
-                        );
+            new_node = std::make_shared<hchar_t>(
+                    (utf16)0,
+                    right_child->freq + left_child->freq,
+                    left_child,
+                    right_child
+                    );
 
-                /* Insert the new parent. */
-                data.push(new_node); // insert(data, new_node)
+            data.push(new_node);
         }
 
         root = right_child;
-        req(root != nullptr, "Nullptr output.");
-}
+        req(root != nullptr, "Nullptr root. [Debug]");
+    }
 
+    enum binary_char {
+        ZERO = '0',
+        ONE = '1'
+    };
 
-priority_queue< std::shared_ptr<h_char>, Greater> create_freqs(const std::vector<unsigned>& freq)
-{
-        std::shared_ptr<h_char> node;
-        // std::vector< std::shared_ptr<h_char> > data;
+    #define POST_EXEC nullptr
+    constexpr char NIL_CHAR = 0;
 
-        priority_queue< std::shared_ptr<h_char>, Greater> d;
+    static inline bool is_leaf(const sptr<hchar_t>& node)
+    {
+        req(node != nullptr);
 
-        for (unsigned c = 0; c < freq.size(); ++c) {
-                if (freq[c]) {
-                        node = std::make_shared<h_char>((char)c, freq[c]);
+        if (node->c == NIL_CHAR) {
+            return false;
+        }
 
-                        d.push(node);
+        req( (node->right == nullptr) && (node->left == nullptr) );
+        return true;
+    }
+
+    void huff_tree::get_codes(vec<string>& codes) const
+    {
+        sptr<hchar_t> node;
+        string code;
+
+        /* simulate stack call */
+        stack<sptr<hchar_t>> st;
+        stack<utf8> bits;
+
+        req(root != nullptr, "[Debug]");
+
+        st.push(root);
+        bits.push(ZERO);
+
+        while (!st.empty()) {
+            auto node = st.top(); /**/ st.pop();
+
+            if (node == POST_EXEC) {
+                code.pop_back();
+                continue;
+            }
+
+            code.push_back(bits.top()); /**/ bits.pop();
+
+            if (is_leaf(node)) {
+                req(node->c < codes.size(), "Bounds check.");
+                codes[node->c] = code;
+
+                code.pop_back();
+            }
+            else {
+                st.push(POST_EXEC);
+
+                if (node->right != nullptr) {
+                    st.push(node->right);
+                    bits.push(ONE);
                 }
+
+                if (node->left != nullptr) {
+                    st.push(node->left);
+                    bits.push(ZERO);
+                }
+            }
         }
+    }
 
-        return d;
-}
+    string encode(const char* file_path, const vec<string>& codes)
+    {
+        ifstream in(file_path);
+        string encoding;
+        utf16 c;
 
+        while (next_char(in, c)) {
+            req(c < codes.size(), "Bounds check failed.");
 
-priority_queue< std::shared_ptr<h_char>, Greater> read_file(const char* file_path)
-{
-        std::ifstream in(file_path);
-
-	req(in, "Null input.");
-
-        std::vector<unsigned> freq;
-        priority_queue< std::shared_ptr<h_char>, Greater > data;
-
-        freq = find_freq(in);
-        in.close();
-
-        /* Create h_char vector from frequencies vector. */
-        priority_queue< std::shared_ptr<h_char>, Greater> d;
-        d = create_freqs(freq);
-
-        data = d;
-        while (!data.empty()) {
-                std::shared_ptr<h_char> ptr;
-                ptr = data.top();
-                data.pop();
-
-                std::cout << "'" << ptr->c << "'" << ": " << ptr->freq << '\t';
+            // TODO: concat strings rather then appending char by char.
+            for (const auto& c_index : codes[c]) {
+                encoding.push_back(c_index);
+            }
         }
-        nll;
+        std::cout << '\n';
 
-        return d;
-}
+        return encoding;
+    }
 
-
-std::vector<std::string> huff_tree::create_codes()
-{
-        std::vector<std::string> codes(200);
-        std::string dummy;
-
-        cc_body(codes, root, '0', dummy);
-
-        return codes;
-}
-
-void huff_tree::cc_body(
-        std::vector <std::string>& codes,
-        const std::shared_ptr<h_char>& current_node,
-        char cc, std::string& code)
-{
-        req(current_node != nullptr, "Null input. [Debug]");
-
-        code.push_back(cc);
-
-        if (current_node->c != 0) {
-                /* Require characters to be leaf nodes. */
-                req(current_node->right == nullptr);
-                req(current_node->left  == nullptr);
-
-                /* Reached leaf node => generated code for the current character. */
-                codes[current_node->c] = code;
-        }
-
-        if (current_node->left != nullptr) {
-                cc_body(codes, current_node->left, '0', code);
-        }
-
-        if (current_node->right != nullptr) {
-                cc_body(codes, current_node->right, '1', code);
-        }
-
-        code.pop_back();
-}
-
-void huff_tree::create_tree_from_file(const char *file_path)
-{
-        priority_queue< std::shared_ptr<h_char>, Greater> data = read_file(file_path);
-        create_tree(data);
 }

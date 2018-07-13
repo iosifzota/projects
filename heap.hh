@@ -7,6 +7,7 @@
 #include <istream>
 #include <ostream>
 #include <vector>
+#include <functional>
 
 template< typename T, class Compare> class heap;
 
@@ -48,10 +49,22 @@ public:
     inline T& operator [] (size_t);
     inline const T& operator [] (size_t) const;
 
+    void map(std::function<void(const T&)>);
+
     friend std::istream& operator >> <T, Compare>(std::istream&, heap<T, Compare>&);
     friend std::ostream& operator << <T, Compare>(std::ostream&, const heap<T, Compare>&);
 
 };
+
+template <typename T, class Compare>
+void heap<T, Compare>::map(std::function<void(const T&)> action)
+{
+        auto temp = *this;
+        while (!temp.empty()) {
+                action(temp.top());
+                temp.pop();
+        }
+}
 
 template <typename T, class Compare>
 Compare heap<T, Compare>::cmp;

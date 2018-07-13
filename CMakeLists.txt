@@ -19,8 +19,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
 
-add_executable(main main.cpp cat.cpp cat.hh dog.cpp dog.hh pet.cpp pet.hh)
-
 #add_executable(arr vec.cpp req.cpp)
 #add_executable(btrees basic_btree.hh RB-node.hh rbtree.hh map.hh binary_trees.cpp req.hh req.cpp)
 #add_executable(redblack basic_btree.hh RB-node.hh rbtree.hh req.hh req.cpp rb-tree.cpp)
@@ -28,8 +26,6 @@ add_executable(main main.cpp cat.cpp cat.hh dog.cpp dog.hh pet.cpp pet.hh)
 #add_executable(hash hash_table.cpp hash_table.hh req.cpp utility.cpp)
 #add_executable(test_hashes test_hashes.cpp hash_table.hh hashes.cpp utility.cpp req.cpp)
 
-# for poo
-#add_executable(shop shop.cpp product.cpp customer.cpp utility.cpp hashes.cpp req.cpp products_order.cpp customers_order.cpp)
 
 # add_executable(mat
 #     matrix.cpp
@@ -53,7 +49,7 @@ add_executable(main main.cpp cat.cpp cat.hh dog.cpp dog.hh pet.cpp pet.hh)
 #     )
 #
 
-#add_executable(huff huffman.cpp freq.cpp req.cpp)
+add_executable(huff huffman.cpp freq.cpp req.cpp)
 
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL GNU OR
 	${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)

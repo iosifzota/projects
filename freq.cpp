@@ -1,31 +1,49 @@
 #include <istream>
 #include <vector>
+#include <wchar.h>
+#include <iostream>
 
 #include "freq.hh"
 
-std::vector<unsigned> find_freq(std::istream& in)
+/* c == 0 if EOF is read. */
+bool next_char(istream& in, utf16& c)
 {
-    std::vector<unsigned> freq(200, 0);
+    int temp = in.get();
 
-	int c;
+    if (temp == EOF) {
+        c = 0;
+        return false;
+    }
 
-	while ((c = in.get()) != EOF) {
-		freq[c]++;
-	}
-    
+    c = temp;
+    return true;
+}
+
+vec<size_t> find_freq(istream& in)
+{
+    vec<size_t> freq(MAX_UTF16, 0);
+    for (
+            utf16 c;
+            next_char(in, c);
+            freq[c]++
+        )
+    {}
+
     return freq;
 }
 
 
-/* Constructor for h_char. */
-h_char::h_char(
-    char c, unsigned freq,
-    std::shared_ptr<h_char> left,
-    std::shared_ptr<h_char> right
-    )
-{
-    this->c = c;
-    this->freq = freq;
-    this->left = left;
-    this->right = right;
-}
+hchar_t::hchar_t(
+    utf16 c_, size_t freq_,
+    sptr<hchar_t> left_,
+    sptr<hchar_t> right_
+    ) :
+    c {c_},
+    freq {freq_},
+    left {left_},
+    right {right_}
+{}
+
+
+
+
