@@ -7,10 +7,10 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL GNU OR
-        ${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
-            set(warnings "-Wall -Wextra -g")
+    ${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
+  set(warnings "-Wall -Wextra -g")
 elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-            set(warnings "/W4 /EHsc")
+  set(warnings "/W4 /EHsc")
 endif()
 set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} ${warnings}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${warnings}")
@@ -20,7 +20,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
 
 #add_executable(arr vec.cpp req.cpp)
-#add_executable(btrees basic_btree.hh RB-node.hh rbtree.hh map.hh binary_trees.cpp req.hh req.cpp)
+add_executable(btrees basic_btree.hh RB-node.hh rbtree.hh map.hh binary_trees.cpp req.hh req.cpp)
 #add_executable(redblack basic_btree.hh RB-node.hh rbtree.hh req.hh req.cpp rb-tree.cpp)
 
 #add_executable(hash hash_table.cpp hash_table.hh req.cpp utility.cpp)
@@ -52,9 +52,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
 add_executable(huff huffman.cpp freq.cpp req.cpp)
 
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL GNU OR
-	${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
-    #	target_link_libraries(a_star m)
-    #	target_link_libraries(hash m)
+    ${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
+  #target_link_libraries(a_star m)
+  #target_link_libraries(hash m)
 endif()
 
 # add_executable(vec

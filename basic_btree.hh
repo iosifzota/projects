@@ -1,11 +1,7 @@
 #ifndef __tree_hh
 #define __tree_hh
 
-// DONE: postorder
-// DONE: print_tree(enum print_tree_option { ERR, preorder, inorder, postorder } )
-
 // WAIT: More hooks vs augmenting base_btree
-
 
 #include <utility>
 #include <memory>
@@ -21,238 +17,263 @@
 
 #include "req.hh"
 
+#define scoped static
+#define In static
+#define Ext static
+
 namespace iz {
 
     template <typename T>
     using shared = std::shared_ptr<T>;
 
+    template <typename T>
+    using fn = std::function<T>;
+
+#ifdef self
+#undef self
+#endif
+
+#define self basic_btree<T, T_Node, Less>
+#define T8T_Node8Less template <typename T, typename T_Node, typename Less>
+
     template <typename T, typename T_Node, typename Less = std::less<T> >
     class basic_btree
     {
-        private:
-            struct Greater {
-                inline bool operator () (const T& lhs, const T& rhs) {
-                    return less(rhs, lhs);
-                }
-            };
+        using shared_node = shared<T_Node>;
 
-            struct Equal {
-                inline bool operator () (const T& lhs, const T& rhs) {
-                    return !(less(lhs, rhs) || greater(lhs, rhs));
-                }
-            };
+    private:
+        struct Greater {
+            inline bool operator () (const T& lhs, const T& rhs) {
+                return less(rhs, lhs);
+            }
+        };
 
-            struct Not_Equal {
-                inline bool operator () (const T& lhs, const T& rhs) {
-                    return !equal(lhs, rhs);
-                }
-            };
+        struct Equal {
+            inline bool operator () (const T& lhs, const T& rhs) {
+                return !(less(lhs, rhs) || greater(lhs, rhs));
+            }
+        };
 
+        struct Not_Equal {
+            inline bool operator () (const T& lhs, const T& rhs) {
+                return !equal(lhs, rhs);
+            }
+        };
+
+    protected:
+        shared_node root;
+        In const shared_node NIL;
+
+        In Less less;
+        In Greater greater;
+        In Equal equal;
+        In Not_Equal not_equal;
+
+        Ext shared_node static_search(const T&, const shared_node&);
+        Ext shared_node static_search_map(const T&, const shared_node&, fn<void(const shared_node&)>);
+        Ext shared_node static_search_interval_intersection(const T&, const T&, const shared_node&);
+        Ext shared_node successor(shared_node);
+        Ext shared_node predecessor(shared_node);
+        Ext shared_node min(shared_node);
+        Ext shared_node max(shared_node);
+
+        /* Map functions. */
+        Ext void static_preorder_map(shared_node, fn<void(const shared_node&)>);
+        Ext void static_inorder_map(shared_node, fn<void(const shared_node&)>);
+        Ext void static_endorder_map(shared_node, fn<void(const shared_node&)>);
+
+        void left_rotate(shared_node,
+                         fn<void(shared_node downlifted, shared_node uplifted)> post_hook);
+        void left_rotate(shared_node);
+
+        void right_rotate(shared_node,
+                          fn<void(shared_node downlifted, shared_node uplifted)> post_hook);
+        void right_rotate(shared_node);
+
+        void transplant(shared_node, shared_node);
+
+    public:
+        basic_btree() {
+            root = NIL;
+        }
+
+        class const_iterator
+        {
         protected:
-            shared<T_Node> root;
-            static const shared<T_Node> NIL;
-
-            static Less less;
-            static Greater greater;
-            static Equal equal;
-            static Not_Equal not_equal;
-
-            static shared<T_Node> static_search(const T&, const shared<T_Node>&);
-            static shared<T_Node> static_search_map(const T&, const shared<T_Node>&, std::function<void(const shared<T_Node>&)>);
-            static shared<T_Node> static_search_interval_intersection(const T&, const T&, const shared<T_Node>&);
-            static shared<T_Node> successor(shared<T_Node>);
-            static shared<T_Node> predecessor(shared<T_Node>);
-            static shared<T_Node> min(shared<T_Node>);
-            static shared<T_Node> max(shared<T_Node>);
-
-			/* Map functions. */
-			static void static_preorder_map(shared<T_Node>, std::function<void(const shared<T_Node>&)>);
-			static void static_inorder_map(shared<T_Node>, std::function<void(const shared<T_Node>&)>);
-			static void static_endorder_map(shared<T_Node>, std::function<void(const shared<T_Node>&)>);
-
-            void left_rotate(shared<T_Node>,
-                    std::function<void(shared<T_Node> downlifted, shared<T_Node> uplifted)> post_hook);
-            void left_rotate(shared<T_Node>);
-
-            void right_rotate(shared<T_Node>,
-                    std::function<void(shared<T_Node> downlifted, shared<T_Node> uplifted)> post_hook);
-            void right_rotate(shared<T_Node>);
-
-            void transplant(shared<T_Node>, shared<T_Node>);
+            // shared_node current;
+            std::weak_ptr<T_Node> current;
 
         public:
-            basic_btree() {
-                root = NIL;
-            }
+            explicit const_iterator(shared_node begin = NIL);
 
-            class const_iterator
-            {
-                protected:
-                    // shared<T_Node> current;
-                    std::weak_ptr<T_Node> current;
+            const_iterator& operator ++ ();
+            const_iterator operator ++ (int);
 
-                public:
-                    explicit const_iterator(shared<T_Node> begin = NIL);
+            const_iterator& operator -- ();
+            const_iterator operator -- (int);
 
-                    const_iterator& operator ++ ();
-                    const_iterator operator ++ (int);
+            const_iterator& find(const T&, const shared_node&);
 
-                    const_iterator& operator -- ();
-                    const_iterator operator -- (int);
+            bool operator == (const const_iterator& other) const;
+            bool operator != (const const_iterator& other) const;
 
-                    const_iterator& find(const T&, const shared<T_Node>&);
+            const T& operator * ();
+        };
 
-                    bool operator == (const const_iterator& other) const;
-                    bool operator != (const const_iterator& other) const;
+        const_iterator begin() const {
+            return const_iterator(root);
+        }
+        const_iterator end() const {
+            const_iterator itr;
+            return itr;
+        }
+        const_iterator find(const T&) const;
 
-                    const T& operator * ();
-            };
+        inline void clear();
+        inline bool empty() const;
+        shared_node search(const T&) const;
+        shared_node search_map(const T&, fn<void(const shared_node&)>) const;
+        shared_node search_interval_intersection(const T&, const T&) const;
 
-            const_iterator begin() const {
-                return const_iterator(root);
-            }
-            const_iterator end() const {
-                const_iterator itr;
-                return itr;
-            }
-            const_iterator find(const T&) const;
+        void preorder_map(fn<void(const shared_node&)>);
+        void inorder_map(fn<void(const shared_node&)>);
+        void endorder_map(fn<void(const shared_node&)>);
 
-            inline void clear();
-            inline bool empty() const;
-            shared<T_Node> search(const T&) const;
-			shared<T_Node> search_map(const T&, std::function<void(const shared<T_Node>&)>) const;
-            shared<T_Node> search_interval_intersection(const T&, const T&) const;
+        void print_tree(unsigned short);
 
-			void preorder_map(std::function<void(const shared<T_Node>&)>);
-			void inorder_map(std::function<void(const shared<T_Node>&)>);
-			void endorder_map(std::function<void(const shared<T_Node>&)>);
+        /* TODO: fix return type
+         * TODO: define copy constructor.
+         */
+        void operator = (basic_btree& other);
 
-			void print_tree(unsigned short);
-
-            /* TODO: fix return type
-             * TODO: define copy contructor.
-             */
-			void operator = (basic_btree& other);
-
-            /* Interface. */
-            virtual T& insert(const T&) = 0;
-            virtual shared<T_Node> extract(shared<T_Node>) = 0;
+        /* Interface. */
+        virtual T& insert(const T&) = 0;
+        virtual shared_node extract(shared_node) = 0;
 
 
-			void print_levels(std::ostream&) const;
-
-            /* TODO: Move outside */
-			void pretty_print() {
-				static_pretty_print(root);
-			}
-
-			void static_pretty_print(shared<T_Node> current, int indent = 0) {
-				req(current != nullptr);
-
-				if (current != NIL) {
-					static_pretty_print(current->right, indent + 10);
-
-					std::cout << '\n' << std::setw(indent) << ' ';
-					std::cout << current << '\n';
-
-					static_pretty_print(current->left, indent + 10);
-				}
-			}
+        void print_levels(std::ostream&) const;
+        void pretty_print();
+        void static_pretty_print(shared_node current, int indent = 0);
     };
 
-	template <typename T, typename T_Node, typename Less>
-	void basic_btree<T, T_Node, Less>::print_levels(std::ostream& out) const
-	{
-		std::queue< std::pair<shared<T_Node>, unsigned> > fringe;
-		shared<T_Node> current_node, temp;
-		unsigned prev_level, current_level;
+    T8T_Node8Less
+    void
+    self::pretty_print()
+    {
+        static_pretty_print(root);
+    }
 
-		req(root != nullptr);
-		if (root == NIL) {
-			return;
-		}
+    T8T_Node8Less
+    void
+    self::static_pretty_print(shared<T_Node> current, int indent) {
+        req(current != nullptr);
 
-		prev_level = 0;
-		fringe.push({ root, 1 });
+        if (current != NIL) {
+            static_pretty_print(current->right, indent + 10);
 
-		unsigned tab, tabs;
-		while (!fringe.empty()) {
-			current_node = fringe.front().first;
-			current_level = fringe.front().second;
+            std::cout << '\n' << std::setw(indent) << ' ';
+            std::cout << current << '\n';
 
-			req(current_node != nullptr, "[Debug]");
+            static_pretty_print(current->left, indent + 10);
+        }
+    }
 
-			if (current_node != NIL) {
-				fringe.push(std::pair<shared<T_Node>, unsigned>(current_node->left, current_level + 1));
-				fringe.push(std::pair<shared<T_Node>, unsigned>(current_node->right, current_level + 1));
-			}
+    T8T_Node8Less
+    void
+    self::print_levels(std::ostream& out) const
+    {
+        std::queue< std::pair<shared<T_Node>, unsigned> > fringe;
+        shared<T_Node> current_node, temp;
+        unsigned prev_level, current_level;
 
-			if (prev_level != current_level) {
-				prev_level = current_level;
-				out << '\n';
+        req(root != nullptr);
+        if (root == NIL) {
+            return;
+        }
 
-				/* Left margin. */
-				tabs = (current_node->size > 1) ? ((unsigned)std::log2(current_node->size * 4)) : 2;
-				for (
-					tab = 0;
-					tab < tabs;
-					++tab)
-				{
-					out << ' ';
-				}
-			}
-			else {
-				/* Left padding. */
-				tabs = (current_node->size > 1) ? ((unsigned)std::log2(current_node->size * 4)) : 1;
-				for (
-					tab = 0;
-					tab < tabs;
-					++tab)
-				{
-					out << ' ';
-				}
-			}
+        prev_level = 0;
+        fringe.push({ root, 1 });
 
-			if (current_node != NIL)
-				out << current_node;
-			else
-				out << ' ';
+        unsigned tab, tabs;
+        while (!fringe.empty()) {
+            current_node = fringe.front().first;
+            current_level = fringe.front().second;
 
-			fringe.pop();
-		}
-	}
+            req(current_node != nullptr, "[Debug]");
 
-    template <typename T, typename T_Node, typename Less>
-    typename basic_btree<T, T_Node, Less>::const_iterator
-        basic_btree<T, T_Node, Less>::find(const T& key) const
+            if (current_node != NIL) {
+                fringe.push(std::pair<shared<T_Node>, unsigned>(current_node->left, current_level + 1));
+                fringe.push(std::pair<shared<T_Node>, unsigned>(current_node->right, current_level + 1));
+            }
+
+            if (prev_level != current_level) {
+                prev_level = current_level;
+                out << '\n';
+
+                /* Left margin. */
+                tabs = (current_node->size > 1) ? ((unsigned)std::log2(current_node->size * 4)) : 2;
+                for (
+                    tab = 0;
+                    tab < tabs;
+                    ++tab)
+                {
+                    out << ' ';
+                }
+            }
+            else {
+                /* Left padding. */
+                tabs = (current_node->size > 1) ? ((unsigned)std::log2(current_node->size * 4)) : 1;
+                for (
+                    tab = 0;
+                    tab < tabs;
+                    ++tab)
+                {
+                    out << ' ';
+                }
+            }
+
+            if (current_node != NIL)
+                out << current_node;
+            else
+                out << ' ';
+
+            fringe.pop();
+        }
+    }
+
+    T8T_Node8Less
+    typename self::const_iterator
+    self::find(const T& key) const
     {
         return end().find(key, root);
     }
 
     /* # Begin::Iterator */
-    template <typename T, typename T_Node, typename Less>
-    basic_btree<T, T_Node, Less>::const_iterator::const_iterator(shared<T_Node> begin)
+    T8T_Node8Less
+    self::const_iterator::const_iterator(shared<T_Node> begin)
     {
         current = min(begin);
     }
 
     /* Relational operators. */
-    template <typename T, typename T_Node, typename Less>
-    bool basic_btree<T, T_Node, Less>::const_iterator::operator == (const const_iterator& other) const {
+    T8T_Node8Less
+    bool
+    self::const_iterator::operator == (const const_iterator& other) const {
         req(!current.expired(), "Iterator was invalidated.");
 
         return static_cast< shared<T_Node> >(current) == static_cast< shared<T_Node> >(other.current);
     }
 
-    template <typename T, typename T_Node, typename Less>
-    bool basic_btree<T, T_Node, Less>::const_iterator::operator != (const const_iterator& other) const {
+    T8T_Node8Less
+    bool
+    self::const_iterator::operator != (const const_iterator& other) const {
         return !(*this == other);
     }
 
     /* Increment operators. */
-    template <typename T, typename T_Node, typename Less>
-    typename basic_btree<T, T_Node, Less>::const_iterator&
-        basic_btree<T, T_Node, Less>::const_iterator::operator ++ ()
+    T8T_Node8Less
+    typename self::const_iterator&
+    self::const_iterator::operator ++ ()
     {
         req(!current.expired(), "Iterator was invalidated.");
 
@@ -260,9 +281,9 @@ namespace iz {
         return *this;
     }
 
-    template <typename T, typename T_Node, typename Less>
-    typename basic_btree<T, T_Node, Less>::const_iterator
-    basic_btree<T, T_Node, Less>::const_iterator::operator ++ (int)
+    T8T_Node8Less
+    typename self::const_iterator
+    self::const_iterator::operator ++ (int)
     {
         const_iterator ret_val = *this;
         ++(*this);
@@ -270,9 +291,9 @@ namespace iz {
     }
 
     /* Decrement operators. */
-    template <typename T, typename T_Node, typename Less>
-    typename basic_btree<T, T_Node, Less>::const_iterator&
-        basic_btree<T, T_Node, Less>::const_iterator::operator -- ()
+    T8T_Node8Less
+    typename self::const_iterator&
+    self::const_iterator::operator -- ()
     {
         req(!current.expired(), "Iterator was invalidated.");
 
@@ -280,9 +301,9 @@ namespace iz {
         return *this;
     }
 
-    template <typename T, typename T_Node, typename Less>
-    typename basic_btree<T, T_Node, Less>::const_iterator
-        basic_btree<T, T_Node, Less>::const_iterator::operator -- (int)
+    T8T_Node8Less
+    typename self::const_iterator
+    self::const_iterator::operator -- (int)
     {
         const_iterator ret_val = *this;
         --(*this);
@@ -290,8 +311,9 @@ namespace iz {
     }
 
     /* * - deref */
-    template <typename T, typename T_Node, typename Less>
-    const T& basic_btree<T, T_Node, Less>::const_iterator::operator * ()
+    T8T_Node8Less
+    const T&
+    self::const_iterator::operator * ()
     {
         shared<T_Node> temp(static_cast< shared<T_Node> >(current));
 
@@ -302,9 +324,9 @@ namespace iz {
     }
 
     /* Search for key btree of =root=. */
-    template <typename T, typename T_Node, typename Less>
-    typename basic_btree<T, T_Node, Less>::const_iterator&
-        basic_btree<T, T_Node, Less>::const_iterator::find(const T& key, const shared<T_Node>& root)
+    T8T_Node8Less
+    typename self::const_iterator&
+    self::const_iterator::find(const T& key, const shared<T_Node>& root)
     {
         current = static_search(key, root);
         return *this;
@@ -312,60 +334,62 @@ namespace iz {
     /* # End Of::iterator */
 
 
-	/* Assign. */
-	template <typename T, typename T_Node, typename Less>
-	void basic_btree<T, T_Node, Less>::operator = (basic_btree<T, T_Node, Less>& other)
-	{
-		std::stack< shared<T_Node> > fringe;
+    /* Assign. */
+    T8T_Node8Less
+    void
+    self::operator = (self& other)
+    {
+        std::stack< shared<T_Node> > fringe;
 
-		clear();
+        clear();
 
-		if (other.empty()) {
-			return;
-		}
+        if (other.empty()) {
+            return;
+        }
 
-		root = std::make_shared<T_Node>(NIL, NIL, NIL);
-		fringe.push(root);
+        root = std::make_shared<T_Node>(NIL, NIL, NIL);
+        fringe.push(root);
 
-		other.preorder_map([&](const shared<T_Node>& other_node) {
+        other.preorder_map([&](const shared<T_Node>& other_node) {
 
-			shared<T_Node> current, backup_parent;
+                shared<T_Node> current, backup_parent;
 
-			req(!fringe.empty());
-			req(fringe.top() != nullptr);
-            req(fringe.top() != NIL);
+                req(!fringe.empty());
+                req(fringe.top() != nullptr);
+                req(fringe.top() != NIL);
 
-			current = fringe.top();
-			fringe.pop();
+                current = fringe.top();
+                fringe.pop();
 
-			backup_parent = current->parent;
-			*current = *other_node;
-			current->parent = backup_parent;
+                backup_parent = current->parent;
+                *current = *other_node;
+                current->parent = backup_parent;
 
-            /*
-			 * FOR_EACH { child of =other_node= | child is !NIL} => current gets a child.
-			 */
-            if (other_node->right != NIL) {
-                current->right = std::make_shared<T_Node>(NIL, NIL, current);
-                fringe.push(current->right);
-            }
-            else {
-                current->right = NIL;
-            }
+                /*
+                 * FOR_EACH { child of =other_node= | child is !NIL} => current gets a child.
+                 */
+                if (other_node->right != NIL) {
+                    current->right = std::make_shared<T_Node>(NIL, NIL, current);
+                    fringe.push(current->right);
+                }
+                else {
+                    current->right = NIL;
+                }
 
-            if (other_node->left != NIL) {
-                current->left = std::make_shared<T_Node>(NIL, NIL, current);
-                fringe.push(current->left);
-            }
-            else {
-                current->left = NIL;
-            }
-		});
-	}
+                if (other_node->left != NIL) {
+                    current->left = std::make_shared<T_Node>(NIL, NIL, current);
+                    fringe.push(current->left);
+                }
+                else {
+                    current->left = NIL;
+                }
+            });
+    }
 
     /* Search =this= tree. */
-    template <typename T, typename T_Node, typename Less>
-    shared<T_Node> basic_btree<T, T_Node, Less>::search(const T& key) const
+    T8T_Node8Less
+    shared<T_Node>
+    self::search(const T& key) const
     {
         shared<T_Node> node(root);
 
@@ -382,159 +406,168 @@ namespace iz {
     }
 
 
-	template <typename T, typename T_Node, typename Less>
-	void basic_btree<T, T_Node, Less>::print_tree(unsigned short option)
-	{
-		switch (option) {
-		case 1:
-			preorder_map([](const shared<T_Node>& node) {
-				std::cout << node << ", ";
-			});
-			std::cout << '\n';
-			break;
+    T8T_Node8Less
+    void
+    self::print_tree(unsigned short option)
+    {
+        switch (option) {
+        case 1:
+            preorder_map([](const shared<T_Node>& node) {
+                    std::cout << node << ", ";
+                });
+            std::cout << '\n';
+            break;
 
-		case 2:
-			inorder_map([](const shared<T_Node>& node) {
-				std::cout << node << ", ";
-			});
-			std::cout << '\n';
-			break;
+        case 2:
+            inorder_map([](const shared<T_Node>& node) {
+                    std::cout << node << ", ";
+                });
+            std::cout << '\n';
+            break;
 
-		case 3:
-			endorder_map([](const shared<T_Node>& node) {
-				std::cout << node << ", ";
-			});
-			std::cout << '\n';
-			break;
+        case 3:
+            endorder_map([](const shared<T_Node>& node) {
+                    std::cout << node << ", ";
+                });
+            std::cout << '\n';
+            break;
 
-		case 4:
-			pretty_print();
-			std::cout << '\n';
-			break;
+        case 4:
+            pretty_print();
+            std::cout << '\n';
+            break;
 
-		default:
-			std::cout << "Invalid option.\n";
-			exit(-5);
-		}
-	}
-
-
-	template <typename T, typename T_Node, typename Less>
-	void basic_btree<T, T_Node, Less>::preorder_map(std::function<void(const shared<T_Node>&)> action)
-	{
-		return static_preorder_map(root, action);
-	}
-
-	template <typename T, typename T_Node, typename Less>
-	void basic_btree<T, T_Node, Less>::static_preorder_map(shared<T_Node> begin, std::function<void(const shared<T_Node>&)> action)
-	{
-		std::stack< shared<T_Node> > fringe;
-		shared<T_Node> current;
-
-		if (begin != NIL) {
-			req(begin != nullptr);
-
-			fringe.push(begin);
-		}
-
-		while (!fringe.empty()) {
-			current = fringe.top();
-			fringe.pop();
-
-			req(current != nullptr);
-
-			action(current);
-
-			if (current->right != NIL) {
-				fringe.push(current->right);
-			}
-
-			if (current->left != NIL) {
-				fringe.push(current->left);
-			}
-		}
-	}
-
-	template <typename T, typename T_Node, typename Less>
-	void basic_btree<T, T_Node, Less>::endorder_map(std::function<void(const shared<T_Node>&)> action)
-	{
-		return static_endorder_map(root, action);
-	}
-
-	template <typename T, typename T_Node, typename Less>
-	void basic_btree<T, T_Node, Less>::static_endorder_map(shared<T_Node> begin, std::function<void(const shared<T_Node>&)> action)
-	{
-		std::stack< shared<T_Node> > fringe;
-		shared<T_Node> current;
-
-		req(begin != NIL);
-		fringe.push(begin);
-
-		while (!fringe.empty()) {
-			current = fringe.top();
-			fringe.pop();
-
-			req(current != nullptr);
-
-			if (current == NIL) {
-				req(!fringe.empty());
-
-				current = fringe.top();
-				fringe.pop();
-
-				req(current != nullptr);
-				req(current != NIL);
-
-				action(current);
-			}
-			else {
-				fringe.push(current);
-				fringe.push(NIL);
-
-				if (current->right != NIL) {
-					fringe.push(current->right);
-				}
-
-				if (current->left != NIL) {
-					fringe.push(current->left);
-				}
-			}
-		}
-	}
-
-	template <typename T, typename T_Node, typename Less>
-	void basic_btree<T, T_Node, Less>::inorder_map(std::function<void(const shared<T_Node>&)> action)
-	{
-		return static_inorder_map(root, action);
-	}
-
-	template <typename T, typename T_Node, typename Less>
-	void basic_btree<T, T_Node, Less>::static_inorder_map(shared<T_Node> begin, std::function<void(const shared<T_Node>&)> action)
-	{
-		req(begin != nullptr);
-
-		for (
-			shared<T_Node> current = min(begin);
-			current != NIL;
-			current = successor(current)
-			)
-		{
-			action(current);
-		}
-	}
+        default:
+            std::cout << "Invalid option.\n";
+            exit(-5);
+        }
+    }
 
 
-    template <typename T, typename T_Node, typename Less>
-    shared<T_Node> basic_btree<T, T_Node, Less>::search_interval_intersection(const T& keyA, const T& keyB) const
+    T8T_Node8Less
+    void
+    self::preorder_map(fn<void(const shared<T_Node>&)> action)
+    {
+        return static_preorder_map(root, action);
+    }
+
+    T8T_Node8Less
+    void
+    self::static_preorder_map(shared<T_Node> begin,
+                              fn<void(const shared<T_Node>&)> action)
+    {
+        std::stack< shared<T_Node> > fringe;
+        shared<T_Node> current;
+
+        if (begin != NIL) {
+            req(begin != nullptr);
+
+            fringe.push(begin);
+        }
+
+        while (!fringe.empty()) {
+            current = fringe.top();
+            fringe.pop();
+
+            req(current != nullptr);
+
+            action(current);
+
+            if (current->right != NIL) {
+                fringe.push(current->right);
+            }
+
+            if (current->left != NIL) {
+                fringe.push(current->left);
+            }
+        }
+    }
+
+    T8T_Node8Less
+    void
+    self::endorder_map(fn<void(const shared<T_Node>&)> action)
+    {
+        return static_endorder_map(root, action);
+    }
+
+    T8T_Node8Less
+    void
+    self::static_endorder_map(shared<T_Node> begin,
+                              fn<void(const shared<T_Node>&)> action)
+    {
+        std::stack< shared<T_Node> > fringe;
+        shared<T_Node> current;
+
+        req(begin != NIL);
+        fringe.push(begin);
+
+        while (!fringe.empty()) {
+            current = fringe.top();
+            fringe.pop();
+
+            req(current != nullptr);
+
+            if (current == NIL) {
+                req(!fringe.empty());
+
+                current = fringe.top();
+                fringe.pop();
+
+                req(current != nullptr);
+                req(current != NIL);
+
+                action(current);
+            }
+            else {
+                fringe.push(current);
+                fringe.push(NIL);
+
+                if (current->right != NIL) {
+                    fringe.push(current->right);
+                }
+
+                if (current->left != NIL) {
+                    fringe.push(current->left);
+                }
+            }
+        }
+    }
+
+    T8T_Node8Less
+    void
+    self::inorder_map(fn<void(const shared<T_Node>&)> action)
+    {
+        return static_inorder_map(root, action);
+    }
+
+    T8T_Node8Less
+    void
+    self::static_inorder_map(shared<T_Node> begin, fn<void(const shared<T_Node>&)> action)
+    {
+        req(begin != nullptr);
+
+        for (
+            shared<T_Node> current = min(begin);
+            current != NIL;
+            current = successor(current)
+            )
+        {
+            action(current);
+        }
+    }
+
+
+    T8T_Node8Less
+    shared<T_Node>
+    self::search_interval_intersection(const T& keyA, const T& keyB) const
     {
         return static_search_interval_intersection(keyA, keyB, root);
     }
 
-    template <typename T, typename T_Node, typename Less>
+    T8T_Node8Less
     shared<T_Node>
-    basic_btree<T, T_Node, Less>::static_search_interval_intersection(
-            const T& keyA, const T& keyB, const shared<T_Node>& begin
-            )
+    self::static_search_interval_intersection(const T& keyA, const T& keyB,
+                                              const shared<T_Node>& begin)
     {
         req(begin != nullptr);
 
@@ -545,12 +578,12 @@ namespace iz {
         heigher_key = std::max(keyA, keyB);
 
         while (
-                node != NIL &&
-                    (
-                     less(node->data, lower_key) ||
-                     ( greater(node->data, heigher_key) && not_equal(node->data, heigher_key) )
-                    )
+            node != NIL &&
+            (
+                less(node->data, lower_key) ||
+                ( greater(node->data, heigher_key) && not_equal(node->data, heigher_key) )
                 )
+            )
         {
             if (less(heigher_key, node->data)) {
                 node = node->left;
@@ -564,8 +597,9 @@ namespace iz {
     }
 
     /* Search tree of root =begin=. */
-    template <typename T, typename T_Node, typename Less>
-    shared<T_Node> basic_btree<T, T_Node, Less>::static_search(const T& key, const shared<T_Node>& begin)
+    T8T_Node8Less
+    shared<T_Node>
+    self::static_search(const T& key, const shared<T_Node>& begin)
     {
         shared<T_Node> node(begin);
 
@@ -581,39 +615,39 @@ namespace iz {
         return node;
     }
 
-	/* Search tree of root =begin=. */
-	template <typename T, typename T_Node, typename Less>
-	shared<T_Node>
-		basic_btree<T, T_Node, Less>
-		::static_search_map(const T& key, const shared<T_Node>& begin, std::function<void(const shared<T_Node>&)> action)
-	{
-		shared<T_Node> node(begin);
+    /* Search tree of root =begin=. */
+    T8T_Node8Less
+    shared<T_Node>
+    self::static_search_map(const T& key, const shared<T_Node>& begin,
+                            fn<void(const shared<T_Node>&)> action)
+    {
+        shared<T_Node> node(begin);
 
-		while (node != NIL && not_equal(node->data, key)) {
-			action(node);
+        while (node != NIL && not_equal(node->data, key)) {
+            action(node);
 
-			if (less(key, node->data)) {
-				node = node->left;
-			}
-			else {
-				node = node->right;
-			}
-		}
+            if (less(key, node->data)) {
+                node = node->left;
+            }
+            else {
+                node = node->right;
+            }
+        }
 
-		return node;
-	}
+        return node;
+    }
 
-	template <typename T, typename T_Node, typename Less>
-	shared<T_Node>
-		basic_btree<T, T_Node, Less>
-		::search_map(const T& key, std::function<void(const shared<T_Node>&)> action) const
-	{
-		return static_search_map(key, root, action);
-	}
+    T8T_Node8Less
+    shared<T_Node>
+    self::search_map(const T& key, fn<void(const shared<T_Node>&)> action) const
+    {
+        return static_search_map(key, root, action);
+    }
 
     /* Make connection: parent of =discarded= <-> =replacement=. */
-    template <typename T, typename T_Node, typename Less>
-    void basic_btree<T, T_Node, Less>::transplant(shared<T_Node> discarded, shared<T_Node> replacement)
+    T8T_Node8Less
+    void
+    self::transplant(shared<T_Node> discarded, shared<T_Node> replacement)
     {
         if (discarded->parent == NIL) {
             root = replacement;
@@ -630,9 +664,10 @@ namespace iz {
 
 
     /* Left rotate */
-    template <typename T, typename T_Node, typename Less>
-    void basic_btree<T, T_Node, Less>::left_rotate(shared<T_Node> downlifted,
-            std::function<void(shared<T_Node>, shared<T_Node>)> post_hook)
+    T8T_Node8Less
+    void
+    self::left_rotate(shared<T_Node> downlifted,
+                      fn<void(shared<T_Node>, shared<T_Node>)> post_hook)
     {
         shared<T_Node> uplifted;
 
@@ -669,17 +704,17 @@ namespace iz {
         post_hook(downlifted, uplifted);
     }
 
-    template <typename T, typename T_Node, typename Less>
-    void basic_btree<T, T_Node, Less>::left_rotate(shared<T_Node> downlifted)
+    T8T_Node8Less
+    void self::left_rotate(shared<T_Node> downlifted)
     {
         return left_rotate(downlifted, [](shared<T_Node>, shared<T_Node>) { return; });
     }
 
 
     /* Right rotate */
-    template <typename T, typename T_Node, typename Less>
-    void basic_btree<T, T_Node, Less>::right_rotate( shared<T_Node> downlifted,
-            std::function<void(shared<T_Node>, shared<T_Node>)> post_hook)
+    T8T_Node8Less
+    void self::right_rotate( shared<T_Node> downlifted,
+                                                     fn<void(shared<T_Node>, shared<T_Node>)> post_hook)
     {
         shared<T_Node> uplifted;
 
@@ -716,8 +751,8 @@ namespace iz {
         post_hook(downlifted, uplifted);
     }
 
-    template <typename T, typename T_Node, typename Less>
-    void basic_btree<T, T_Node, Less>::right_rotate(shared<T_Node> downlifted)
+    T8T_Node8Less
+    void self::right_rotate(shared<T_Node> downlifted)
     {
         return right_rotate(downlifted, [](shared<T_Node>, shared<T_Node>) { return; });
     }
@@ -725,64 +760,64 @@ namespace iz {
 
     /* Macro for generating the body of successor & predecessor. */
 #define generate_predecessor__successor(left__right, max__min)	\
-    shared<T_Node> aux(NIL);									\
+    shared<T_Node> aux(NIL);                                    \
                                                                 \
-    if (node == NIL)											\
-    return aux;												    \
+    if (node == NIL)                                            \
+        return aux;                                             \
                                                                 \
-    if (node->left__right != NIL)								\
-    return max__min(node->left__right);						    \
+    if (node->left__right != NIL)                               \
+        return max__min(node->left__right);                     \
                                                                 \
-    aux = node->parent;											\
-    while (aux != NIL && node == aux->left__right) {			\
-        node = aux;												\
-        aux = aux->parent;										\
-    }															\
+    aux = node->parent;                                         \
+    while (aux != NIL && node == aux->left__right) {            \
+        node = aux;                                             \
+        aux = aux->parent;                                      \
+    }                                                           \
     return aux;
 
-    template <typename T, typename T_Node, typename Less>
-    shared<T_Node> basic_btree<T, T_Node, Less>::successor(shared<T_Node> node)
+    T8T_Node8Less
+    shared<T_Node> self::successor(shared<T_Node> node)
     {
         generate_predecessor__successor(right, min);
     }
 
-    template <typename T, typename T_Node, typename Less>
-    shared<T_Node> basic_btree<T, T_Node, Less>::predecessor(shared<T_Node> node)
+    T8T_Node8Less
+    shared<T_Node> self::predecessor(shared<T_Node> node)
     {
         generate_predecessor__successor(left, max);
     }
 
 
     /* Macro for generating the body of min & max. */
-#define generate_min__max(left__right)	\
+#define generate_min__max(left__right)          \
     shared<T_Node> aux(NIL);			\
-                                        \
-    while (node != NIL) {				\
-        aux = node;						\
+                                                \
+    while (node != NIL) {                       \
+        aux = node;                             \
         node = node->left__right;		\
-    }									\
+    }                                           \
     return aux;
 
-    template <typename T, typename T_Node, typename Less>
-    shared<T_Node> basic_btree<T, T_Node, Less>::min(shared<T_Node> node)
+    T8T_Node8Less
+    shared<T_Node> self::min(shared<T_Node> node)
     {
         generate_min__max(left);
     }
 
-    template <typename T, typename T_Node, typename Less>
-    shared<T_Node> basic_btree<T, T_Node, Less>::max(shared<T_Node> node)
+    T8T_Node8Less
+    shared<T_Node> self::max(shared<T_Node> node)
     {
         generate_min__max(right);
     }
 
-    template <typename T, typename T_Node, typename Less>
-    bool basic_btree<T, T_Node, Less>::empty() const
+    T8T_Node8Less
+    bool self::empty() const
     {
         return root == NIL;
     }
 
-    template <typename T, typename T_Node, typename Less>
-    void basic_btree<T, T_Node, Less>::clear()
+    T8T_Node8Less
+    void self::clear()
     {
         req(root != nullptr);
         req(NIL != nullptr);
@@ -791,22 +826,23 @@ namespace iz {
         root = NIL;
     }
 
-
     /* Static members initialization. */
-    template <typename T, typename T_Node, typename Less>
-    const shared<T_Node> basic_btree<T, T_Node, Less>::NIL = std::make_shared<T_Node>();
+    T8T_Node8Less
+    const shared<T_Node> self::NIL = std::make_shared<T_Node>();
 
-    template <typename T, typename T_Node, typename Less>
-    Less basic_btree<T, T_Node, Less>::less;
+    T8T_Node8Less
+    Less self::less;
 
-    template <typename T, typename T_Node, typename Less>
-    typename basic_btree<T, T_Node, Less>::Greater basic_btree<T, T_Node, Less>::greater;
+    T8T_Node8Less
+    typename self::Greater self::greater;
 
-    template <typename T, typename T_Node, typename Less>
-    typename basic_btree<T, T_Node, Less>::Equal basic_btree<T, T_Node, Less>::equal;
+    T8T_Node8Less
+    typename self::Equal self::equal;
 
-    template <typename T, typename T_Node, typename Less>
-    typename basic_btree<T, T_Node, Less>::Not_Equal basic_btree<T, T_Node, Less>::not_equal;
+    T8T_Node8Less
+    typename self::Not_Equal self::not_equal;
+
+#undef self
 }
 
 #endif // ! __tree_hh
