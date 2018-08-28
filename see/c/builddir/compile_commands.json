@@ -1,0 +1,22 @@
+[
+  {
+    "directory": "/home/idlefly/ds/c/builddir",
+    "command": "cc  -Imain@exe -I. -I.. -fdiagnostics-color=always -pipe -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -O0 -g -MD -MQ 'main@exe/memory.c.o' -MF 'main@exe/memory.c.o.d' -o 'main@exe/memory.c.o' -c ../memory.c",
+    "file": "../memory.c"
+  },
+  {
+    "directory": "/home/idlefly/ds/c/builddir",
+    "command": "cc  -Imain@exe -I. -I.. -fdiagnostics-color=always -pipe -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -O0 -g -MD -MQ 'main@exe/req.c.o' -MF 'main@exe/req.c.o.d' -o 'main@exe/req.c.o' -c ../req.c",
+    "file": "../req.c"
+  },
+  {
+    "directory": "/home/idlefly/ds/c/builddir",
+    "command": "cc  -Ibuf@exe -I. -I.. -fdiagnostics-color=always -pipe -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -O0 -g -MD -MQ 'buf@exe/buf.c.o' -MF 'buf@exe/buf.c.o.d' -o 'buf@exe/buf.c.o' -c ../buf.c",
+    "file": "../buf.c"
+  },
+  {
+    "directory": "/home/idlefly/ds/c/builddir",
+    "command": "cc  -Ibuf@exe -I. -I.. -fdiagnostics-color=always -pipe -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -O0 -g -MD -MQ 'buf@exe/req.c.o' -MF 'buf@exe/req.c.o.d' -o 'buf@exe/req.c.o' -c ../req.c",
+    "file": "../req.c"
+  }
+]
