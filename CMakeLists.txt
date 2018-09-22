@@ -27,6 +27,9 @@ add_executable(btrees basic_btree.hh RB-node.hh rbtree.hh map.hh binary_trees.cp
 #add_executable(test_hashes test_hashes.cpp hash_table.hh hashes.cpp utility.cpp req.cpp)
 
 
+add_executable(slot slot.hh slot.cpp)
+
+
 # add_executable(mat
 #     matrix.cpp
 #     req.cpp)
@@ -36,7 +39,7 @@ add_executable(btrees basic_btree.hh RB-node.hh rbtree.hh map.hh binary_trees.cp
 #     req.cpp
 #     )
 
-#add_executable(a_star a_star.cpp req.cpp)
+add_executable(a_star a_star.cpp req.cpp)
 
 # add_executable(heap
 #     heap.cpp
@@ -55,6 +58,7 @@ if (${CMAKE_CXX_COMPILER_ID} STREQUAL GNU OR
     ${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
   #target_link_libraries(a_star m)
   #target_link_libraries(hash m)
+  target_link_libraries(slot m)
 endif()
 
 # add_executable(vec

@@ -14,65 +14,65 @@ void print_green(const char *);
 /* TODO: req with only one arg: parse the *code* using a function (if_cpp constexpr fn). */
 #define req(...) EXPAND__MACRO(GET__one_two(__VA_ARGS__, req__two, req__one)(__VA_ARGS__))
 
-#define req__one(test__condition) \
-	require((test__condition) ? (1) : (0), #test__condition, __FUNCTION__, __LINE__)
+#define req__one(test__condition)                                       \
+    require((test__condition) ? (1) : (0), #test__condition, __FUNCTION__, __LINE__)
 
-#define req__two(test__condition, err__msg)  \
-	require((test__condition) ? (1) : (0), #test__condition, __FUNCTION__, __LINE__, err__msg)
+#define req__two(test__condition, err__msg)                             \
+    require((test__condition) ? (1) : (0), #test__condition, __FUNCTION__, __LINE__, err__msg)
 
 static inline void fatal_print_begin(const char* assertion)
 {
-	printf("\n[ ");
-	print_red("Err");
-	printf(" ] False assertion: ");
-	printf("%s", assertion);
+    printf("\n[ ");
+    print_red("Err");
+    printf(" ] False assertion: ");
+    printf("%s", assertion);
 }
 
 static inline void fatal_print_end(const char* calling_function, int line)
 {
-	printf("\t@%s() <%d>\n", calling_function, line);
-	fflush(stdout);
-	exit(-1);
+    printf("\t@%s() <%d>\n", calling_function, line);
+    fflush(stdout);
+    exit(-1);
 }
 
 inline bool require(bool clause, const char* assertion, const char* calling_function, int line)
 {
-	if (!clause) {
-		fatal_print_begin(assertion);
-		putchar('.');
-		fatal_print_end(calling_function, line);
-	}
-	return true;
+    if (!clause) {
+        fatal_print_begin(assertion);
+        putchar('.');
+        fatal_print_end(calling_function, line);
+    }
+    return true;
 }
 
 inline bool require(bool clause, const char* assertion, const char* calling_function, int line, const char* err_msg)
 {
-	if (!clause) {
-		fatal_print_begin(assertion);
-		printf(".  // %s", err_msg);
-		fatal_print_end(calling_function, line);
-	}
-	return true;
+    if (!clause) {
+        fatal_print_begin(assertion);
+        printf(".  // %s", err_msg);
+        fatal_print_end(calling_function, line);
+    }
+    return true;
 }
 
 
-#define test_wrap(test_name, ...) {						\
-		printf("\n * %s...\n", is_char_ptr(test_name));	\
-		__VA_ARGS__;									\
-		printf(" *");									\
-		print_green("OK\n");							\
-	}
+#define test_wrap(test_name, ...) {                     \
+        printf("\n * %s...\n", is_char_ptr(test_name)); \
+        __VA_ARGS__;                                    \
+        printf(" *");                                   \
+        print_green("OK\n");                            \
+    }
 
-#define tt_wrap(test_name, ...) {						\
-		printf("\n ** %s...\n", is_char_ptr(test_name));\
-		__VA_ARGS__;									\
-		printf(" **");									\
-		print_green("OK\n");							\
-	}
+#define tt_wrap(test_name, ...) {                               \
+        printf("\n ** %s...\n", is_char_ptr(test_name));        \
+        __VA_ARGS__;                                            \
+        printf(" **");                                          \
+        print_green("OK\n");                                    \
+    }
 
 inline const char* is_char_ptr(const char* ptr)
 {
-	return ptr;
+    return ptr;
 }
 
 #endif

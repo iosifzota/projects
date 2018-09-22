@@ -16,85 +16,85 @@
 namespace iz {
 
     template <typename T, typename Tnode>
-	class BST;
+    class BST;
 
     template <typename T>
-	using shared = std::shared_ptr<T>;
+    using shared = std::shared_ptr<T>;
 
     /* BEGIN - BST - */
     template <typename T, typename Tnode = Node<T> >
-	class BST {
+    class BST {
     public:
-    class iterator
-    {
-    private:
-    shared<Tnode> current;
+        class iterator
+        {
+        private:
+            shared<Tnode> current;
 
-    public:
-    explicit iterator(shared<Tnode> begin = nullptr);
+        public:
+            explicit iterator(shared<Tnode> begin = nullptr);
 
-    iterator& operator ++ ();
-    iterator operator ++ (int);
+            iterator& operator ++ ();
+            iterator operator ++ (int);
 
-    iterator& find(const T&, const shared<Tnode>&);
+            iterator& find(const T&, const shared<Tnode>&);
 
-    bool operator == (const iterator& other) const;
-    bool operator != (const iterator& other) const;
+            bool operator == (const iterator& other) const;
+            bool operator != (const iterator& other) const;
 
-    const T& operator * ();
-    };
+            const T& operator * ();
+        };
 
-    /* Iterators */
-    iterator begin() const {
-        return iterator(root);
-    }
+        /* Iterators */
+        iterator begin() const {
+            return iterator(root);
+        }
 
-    iterator end() const {
-        iterator itr;
-        return itr;
-    }
+        iterator end() const {
+            iterator itr;
+            return itr;
+        }
 
-    shared<Tnode> print(std::ostream& out) {
-        if (root != nullptr)
-            out << root;
-        return root;
-    }
+        shared<Tnode> print(std::ostream& out) {
+            if (root != nullptr)
+                out << root;
+            return root;
+        }
 
-    /* Constructor & destructor. */
-    BST() : root{ nullptr } {}
-    ~BST() { root = nullptr; }
+        /* Constructor & destructor. */
+        BST() : root{ nullptr } {}
+        ~BST() { root = nullptr; }
 
-    /* Methods that mutate the root */
-    shared<Tnode> insert(const T&);
-    shared<Tnode> extract(shared<Tnode>);
-    void transplant(shared<Tnode>, shared<Tnode>);
+        /* Methods that mutate the root */
+        shared<Tnode> insert(const T&);
+        shared<Tnode> extract(shared<Tnode>);
+        void transplant(shared<Tnode>, shared<Tnode>);
 
-    /* Pure methods */
-    /* UI */
-    bool empty() const;
-    iterator find(const T& key) const;
+        /* Pure methods */
+        /* UI */
+        bool empty() const;
+        iterator find(const T& key) const;
 
-    /* Helpers. [TODO] => protected. */
-    shared<Tnode> search(const T&) const;
-    static shared<Tnode> static_search(const T&, const shared<Tnode>&);
-    static shared<Tnode> successor(shared<Tnode>);
-    static shared<Tnode> predecessor(shared<Tnode>);
-    static shared<Tnode> min(shared<Tnode>);
-    static shared<Tnode> max(shared<Tnode>);
+        /* Helpers. [TODO] => protected. */
+        shared<Tnode> search(const T&) const;
+        static shared<Tnode> static_search(const T&, const shared<Tnode>&);
+        static shared<Tnode> successor(shared<Tnode>);
+        static shared<Tnode> predecessor(shared<Tnode>);
+        static shared<Tnode> min(shared<Tnode>);
+        static shared<Tnode> max(shared<Tnode>);
 
     protected:
-    shared<Tnode> root;
+        shared<Tnode> root;
     };
 
     template <typename T, typename Tnode>
-	typename BST<T, Tnode>::iterator
-        BST<T, Tnode>::find(const T& key) const
+    typename BST<T, Tnode>::iterator
+    BST<T, Tnode>::find(const T& key) const
     {
         return end().find(key, root);
     }
 
     template <typename T, typename Tnode>
-	shared<Tnode> BST<T, Tnode>::search(const T& key) const
+    shared<Tnode> BST<T, Tnode>::search(const T& key) const
     {
         shared<Tnode> node(root);
 
@@ -111,7 +111,7 @@ namespace iz {
     }
 
     template <typename T, typename Tnode>
-	shared<Tnode> BST<T, Tnode>::static_search(const T& key, const shared<Tnode>& begin)
+    shared<Tnode> BST<T, Tnode>::static_search(const T& key, const shared<Tnode>& begin)
     {
         shared<Tnode> node(begin);
 
@@ -128,7 +128,7 @@ namespace iz {
     }
 
     template <typename T, typename Tnode>
-	shared<Tnode> BST<T, Tnode>::extract(shared<Tnode> extracted)
+    shared<Tnode> BST<T, Tnode>::extract(shared<Tnode> extracted)
     {
         if (extracted == nullptr) {
             return nullptr;
@@ -162,7 +162,7 @@ namespace iz {
     }
 
     template <typename T, typename Tnode>
-	void BST<T, Tnode>::transplant(shared<Tnode> discarded, shared<Tnode> replacement)
+    void BST<T, Tnode>::transplant(shared<Tnode> discarded, shared<Tnode> replacement)
     {
         if (discarded->parent == nullptr) {
             root = replacement;
@@ -180,7 +180,7 @@ namespace iz {
     }
 
     template <typename T, typename Tnode>
-	shared<Tnode> BST<T, Tnode>::insert(const T& val)
+    shared<Tnode> BST<T, Tnode>::insert(const T& val)
     {
         shared<Tnode> new_node = std::make_shared<Tnode>(val);
 
@@ -234,13 +234,13 @@ namespace iz {
     return aux;
 
     template <typename T, typename Tnode>
-	shared<Tnode> BST<T, Tnode>::successor(shared<Tnode> node)
+    shared<Tnode> BST<T, Tnode>::successor(shared<Tnode> node)
     {
         cessor(right, min, >);
     }
 
     template <typename T, typename Tnode>
-	shared<Tnode> BST<T, Tnode>::predecessor(shared<Tnode> node)
+    shared<Tnode> BST<T, Tnode>::predecessor(shared<Tnode> node)
     {
         cessor(left, max, <);
     }
@@ -257,19 +257,19 @@ namespace iz {
     return aux;
 
     template <typename T, typename Tnode>
-	shared<Tnode> BST<T, Tnode>::min(shared<Tnode> node)
+    shared<Tnode> BST<T, Tnode>::min(shared<Tnode> node)
     {
         mm(left);
     }
 
     template <typename T, typename Tnode>
-	shared<Tnode> BST<T, Tnode>::max(shared<Tnode> node)
+    shared<Tnode> BST<T, Tnode>::max(shared<Tnode> node)
     {
         mm(right);
     }
 
     template <typename T, typename Tnode>
-	bool BST<T, Tnode>::empty() const
+    bool BST<T, Tnode>::empty() const
     {
         return root == nullptr;
     }
@@ -280,34 +280,34 @@ namespace iz {
     /* BEGIN - BST::iterator - */
     /* Constructor. */
     template <typename T, typename Tnode>
-	BST<T, Tnode>::iterator::iterator(shared<Tnode> begin)
+    BST<T, Tnode>::iterator::iterator(shared<Tnode> begin)
     {
         current = min(begin);
     }
 
     /* Relational operators. */
     template <typename T, typename Tnode>
-	bool BST<T, Tnode>::iterator::operator == (const iterator& other) const {
+    bool BST<T, Tnode>::iterator::operator == (const iterator& other) const {
         return current == other.current;
     }
 
     template <typename T, typename Tnode>
-	bool BST<T, Tnode>::iterator::operator != (const iterator& other) const {
+    bool BST<T, Tnode>::iterator::operator != (const iterator& other) const {
         return !(*this == other);
     }
 
     /* Increment operators. */
     template <typename T, typename Tnode>
-	typename BST<T, Tnode>::iterator&
-        BST<T, Tnode>::iterator::operator ++ ()
+    typename BST<T, Tnode>::iterator&
+    BST<T, Tnode>::iterator::operator ++ ()
     {
         current = successor(current);
         return *this;
     }
 
     template <typename T, typename Tnode>
-	typename BST<T, Tnode>::iterator
-        BST<T, Tnode>::iterator::operator ++ (int)
+    typename BST<T, Tnode>::iterator
+    BST<T, Tnode>::iterator::operator ++ (int)
     {
         iterator ret_val = *this;
         ++(*this);
@@ -316,14 +316,14 @@ namespace iz {
 
     /* Immutable access. */
     template <typename T, typename Tnode>
-	const T& BST<T, Tnode>::iterator::operator * () {
+    const T& BST<T, Tnode>::iterator::operator * () {
         req(current != nullptr, "Iterator == end()");
         return current->data;
     }
 
     template<typename T, typename Tnode>
-	typename BST<T, Tnode>::iterator&
-        BST<T, Tnode>::iterator::find(const T& key, const shared<Tnode>& root)
+    typename BST<T, Tnode>::iterator&
+    BST<T, Tnode>::iterator::find(const T& key, const shared<Tnode>& root)
     {
         current = static_search(key, root);
         return *this;

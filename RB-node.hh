@@ -5,296 +5,228 @@
 #include <memory>
 #include <cstring>
 
-#include "req.hh"
+#ifdef self
+#undef self
+#endif
+#define self RB_Node<T>
 
-/*
-  TODO: remove memset
-*/
+#ifdef T8
+#undef T8
+#endif
+#define T8 template <typename T>
 
 namespace iz {
-	enum RB_color {
-		RED,
-		BLACK
-	};
+    enum RB_color {
+        RED,
+        BLACK
+    };
+    using RB_color = enum RB_color;
 
-	using RB_color = enum RB_color;
+    /* BEGIN - RB_Node - */
+    template<typename T>
+    struct RB_Node;
+    template <typename T>
+    using shared_rb_node = std::shared_ptr< RB_Node<T> >;
 
-	/* BEGIN - RB_Node - */
-	template<typename T>
-	struct RB_Node;
+    template<typename T>
+    inline std::ostream& operator<<(std::ostream&, const RB_Node<T>&);
+    template<typename T>
+    inline std::ostream& operator<<(std::ostream&, const shared_rb_node<T>&);
 
-	template <typename T>
-	using shared_rb_node = std::shared_ptr< RB_Node<T> >;
+    template<typename T>
+    struct RB_Node {
+        using shared_node = shared_rb_node<T>;
+        /* Construct */
+        RB_Node();
+        ~RB_Node();
+        // parent [, data]
+        RB_Node(const shared_node&, const T&);
+        RB_Node(const shared_node&);
+        // <, > [, data]
+        RB_Node(const shared_node&, const shared_node&, const T&);
+        RB_Node(const shared_node&, const shared_node&);
 
-	template<typename T>
-	inline std::ostream& operator<<(std::ostream&, const RB_Node<T>&);
+        /* Access */
+        inline T& operator()();
+        inline const T& operator()() const;
 
-	template<typename T>
-	inline std::ostream& operator<<(std::ostream&, const shared_rb_node<T>&);
+        /* Print */
+        friend std::ostream& operator<< <>(std::ostream&, const RB_Node<T>&);
+        friend std::ostream& operator<< <>(std::ostream&, const shared_node&);
+        inline std::ostream& print_data(std::ostream&, const char *) const;
 
+        /* Helpers for augumenting. */
+        inline void update_size();
+        inline void update_sum();
+        inline void update_metadata();
 
-	template<typename T>
-	struct RB_Node {
-		T data;
-		shared_rb_node <T> left;
-		shared_rb_node <T> right;
-		shared_rb_node <T> parent;
-		RB_color color;
+        T data;
+        shared_node left, right, parent;
+        RB_color color;
+        /* Extra */
+        unsigned size;
+        T sum;
+    private:
+        /* Used in `print_data` to avoid printing garbage values. */
+        bool init;
+    };
 
-		/* Extra */
-		unsigned size;
-		T sum;
+    T8
+    self::RB_Node()
+        :
+        data{},
+        left{},
+        right{},
+        parent{},
+        color{ RED },
+        size{},
+        sum{},
+        init{ false }
+    { }
 
-		RB_Node();
+    T8
+    self::~RB_Node()
+    {
+        parent = left = right = nullptr;
+    }
 
-		/* Just data. */
-		explicit RB_Node(const T&);
+    T8
+    self::RB_Node(const shared_rb_node<T>& p, const T& val)
+        :
+        data{ val },
+        left{},
+        right{},
+        parent{ p },
+        color{ RED },
+        size{ 1 },
+        sum{ val },
+        init{ true }
+    { }
 
-		explicit RB_Node(RB_color);
-
-		/* Data and parent. */
-		RB_Node(const T&, const shared_rb_node<T>&);
-
-		/* Data, left and right children. */
-		RB_Node(const T&, const shared_rb_node<T>&, const shared_rb_node<T>&);
-
-		/* Data, left, right children and parent. */
-		RB_Node(const T&, const shared_rb_node <T>&, const shared_rb_node<T>&, const shared_rb_node<T>&);
-
-		/* mehh */
-		RB_Node(const shared_rb_node <T>&, const shared_rb_node<T>&, const shared_rb_node<T>&);
-
-		/* Reset left, right, parent to `nullptr`. */
-		~RB_Node();
-
-		/* Data access & print. */
-		inline T& operator()();
-
-		inline const T& operator()() const;
-
-		inline std::ostream& print_data(std::ostream&, const char *) const;
-
-		/* Print RB_Node/shared_rb_node. */
-		friend std::ostream& operator<< <>(std::ostream&, const RB_Node<T>&);
-
-		friend std::ostream& operator<< <>(std::ostream&, const shared_rb_node<T>&);
-
-		/* Helper for `<<`. */
-		static inline std::ostream& print_relative(std::ostream&, const shared_rb_node<T>&, const char *);
-
-
-		/* TODO: Move outside */
-		/* Helpers for augumenting. */
-		void update_size() {
-			unsigned new_size{};
-
-			if (left != nullptr) {
-				new_size += left->size;
-			}
-			if (right != nullptr) {
-				new_size += right->size;
-			}
-			new_size += 1;
-
-			size = new_size;
-		}
-
-		void update_sum() {
-			T new_sum{};
-			//std::cout << "Starting at: " << new_sum << '\n';
-
-			if (left != nullptr) {
-				new_sum += left->sum;
-			}
-			if (right != nullptr) {
-				new_sum += right->sum;
-			}
-			new_sum += data;
-
-			sum = new_sum;
-		}
-
-		void update_metadata() {
-			update_size();
-			update_sum();
-		}
-
-	private:
-		/* Used in `print_data` to avoid printing garbage values. */
-		bool init;
-	};
+    T8
+    self::RB_Node(const shared_rb_node<T>& p)
+        :
+        data{},
+        left{},
+        right{},
+        parent{ p },
+        color{ RED },
+        size{},
+        sum{},
+        init{ false }
+    { }
 
 
-	template<typename T>
-	RB_Node<T>::RB_Node()
-		:
-		data{},
-		left{ nullptr },
-		right{ nullptr },
-		parent{ nullptr },
-		color{ RED },
-		size{ 0 },
-		init{ false },
-		sum{}
-	{ }
+    T8
+    self::RB_Node(const shared_rb_node<T>& l, const shared_rb_node<T>& r, const T& val)
+        :
+        data{ val },
+        left{ l },
+        right{ r },
+        parent{},
+        color{ RED },
+        size{ 1 },
+        sum{ val },
+        init{ true }
+    {
+        if (l != nullptr && l->init == true) {
+            ++size;
+            sum += l->data;
+        }
+        if (r != nullptr && r->init == true) {
+            ++size;
+            sum += r->data;
+        }
+    }
 
-	template<typename T>
-	RB_Node<T>::RB_Node(RB_color c)
-		:
-		data{},
-		left{ nullptr },
-		right{ nullptr },
-		parent{ nullptr },
-		color{ c },
-		size{ 0 },
-		init{ false },
-		sum{}
-	{ }
+    T8
+    self::RB_Node(const shared_rb_node<T>& l, const shared_rb_node<T>& r)
+        :
+        data{},
+        left{ l },
+        right{ r },
+        parent{},
+        color{ RED },
+        size{},
+        sum{},
+        init{ false }
+    { }
 
-	template<typename T>
-	RB_Node<T>::RB_Node(const T& d)
-		:
-		data{ d },
-		left{ nullptr },
-		right{ nullptr },
-		parent{ nullptr },
-		color{ RED },
-		size{ 1 },
-		sum{ d },
-		init{ true }
-	{ }
+    template<typename T>
+    std::ostream&
+    operator<<(std::ostream& out, const RB_Node<T>& n)
+    {
+        return n.print_data(out, "Node");
+    }
+    template<typename T>
+    std::ostream&
+    operator<<(std::ostream& out, const shared_rb_node<T>& n)
+    {
+        return (n != nullptr) ? out << *n : out << "Node: (null)\n";
+    }
 
-	template<typename T>
-	RB_Node<T>::RB_Node(const T& d, const shared_rb_node<T>& p)
-		:
-		data{ d },
-		parent{ p },
-		left{ nullptr },
-		right{ nullptr },
-		color{ RED },
-		size{ 1 },
-		sum{ d },
-		init{ true }
-	{ }
+    T8
+    std::ostream&
+    self::print_data(std::ostream& out, const char *) const
+    {
+        return
+            (!init)          ? out << "(uninitialized)" : out << data,
+            (color == BLACK) ? out << "::B"             : out << "::R";
+    }
 
-	template<typename T>
-	RB_Node<T>::RB_Node(const T& d, const shared_rb_node <T>& l, const shared_rb_node<T>& r)
-		:
-		data{ d },
-		left{ l },
-		right{ r },
-		parent{ nullptr },
-		color{ RED },
-		size{ 1 },
-		sum{ d },
-		init{ true }
-	{ }
+    T8
+    T&
+    self::operator() ()
+    {
+        return data;
+    }
 
-	template<typename T>
-	RB_Node<T>::RB_Node(const T& d, const shared_rb_node<T>& l, const shared_rb_node<T>& r, const shared_rb_node<T>& p)
-		:
-		data{ d },
-		left{ l },
-		right{ r },
-		parent{ p },
-		color{ RED },
-		size{ 1 },
-		sum{ d },
-		init{ true }
-	{ }
+    T8
+    const T&
+    self::operator() () const
+    {
+        return data;
+    }
 
+    /* Helpers for augumenting. */
+    T8
+    void
+    self::update_size() {
+        unsigned new_size{};
+        if (left != nullptr) {
+            new_size += left->size;
+        }
+        if (right != nullptr) {
+            new_size += right->size;
+        }
+        new_size += 1;
 
-	template<typename T>
-	RB_Node<T>::RB_Node(const shared_rb_node<T>& l, const shared_rb_node<T>& r, const shared_rb_node<T>& p)
-		:
-		data{},
-		left{ l },
-		right{ r },
-		parent{ p },
-		color{ RED },
-		size{ 0 },
-		init{ false },
-		sum{}
-	{ }
+        size = new_size;
+    }
 
-	template<typename T>
-	RB_Node<T>::~RB_Node()
-	{
-		parent = left = right = nullptr;
-	}
+    T8
+    void
+    self::update_sum() {
+        T new_sum{};
+        if (left != nullptr) {
+            new_sum += left->sum;
+        }
+        if (right != nullptr) {
+            new_sum += right->sum;
+        }
+        new_sum += data;
 
-	template<typename T>
-	std::ostream& operator << (std::ostream& out, const RB_Node<T>& n)
-	{
-		n.print_data(out, "Node");
+        sum = new_sum;
+    }
 
-		//RB_Node<T>::print_relative(out, n.parent, "Parent");
-		//RB_Node<T>::print_relative(out, n.left, "Left");
-		//RB_Node<T>::print_relative(out, n.right, "Right");
-
-		return out;
-	}
-
-	template<typename T>
-	std::ostream& operator<<(std::ostream& out, const shared_rb_node<T>& n)
-	{
-		return (n != nullptr) ? out << *n : out << "Node: (null)\n";
-	}
-
-	template<typename T>
-	std::ostream& RB_Node<T>::print_data(std::ostream& out, const char *) const
-	{
-		//out << node_str << ": ";
-
-		if (!init) {
-			out << "(uninitialized)";
-		}
-		else {
-			out << data; //  << '{' << size << ", " << sum << '}';
-		}
-
-		//out << "\t\t\t\t\t::";
-
-		if (color == BLACK) {
-			//out << "BLACK";
-			out << "::B";
-		}
-		else {
-			//out << "RED";
-			out << "::R";
-		}
-
-		//return out << '\n';
-		return out;
-	}
-
-	template<typename T>
-	std::ostream&
-		RB_Node<T>::print_relative(std::ostream& out, const shared_rb_node<T>& relative, const char *relative_str)
-	{
-		out << '\t';
-
-		if (relative == nullptr)
-			return out << relative_str << ": (null)" << '\n';
-
-		(*relative).print_data(out, relative_str);
-
-		return out;
-	}
-
-	template<typename T>
-	T& RB_Node<T>::operator() ()
-	{
-		return data;
-	}
-
-	template<typename T>
-	const T& RB_Node<T>::operator() () const
-	{
-		return data;
-	}
-	/* END - RB_Node - */
-
+    T8
+    void
+    self::update_metadata() {
+        update_size();
+        update_sum();
+    }
 }
 
+#undef self
+#undef T8
 #endif
