@@ -32,9 +32,9 @@ namespace iz {
 
         void construct(T*, T*);
 
-        T& insert(const T&);
+        T& insert(const T&) override;
         T& insert_unique(const T&);
-        shared_rb_node<T> extract(shared_rb_node<T>);
+        shared_rb_node<T> extract(shared_rb_node<T>) override;
         shared_rb_node<T> extract(const T&);
         /* Auguments. */
         using basic_btree<T, RB_Node<T>, Less>::empty;
