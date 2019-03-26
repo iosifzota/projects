@@ -63,10 +63,18 @@ double aprox_cost(const Coordinates& lhs, const Coordinates& rhs);
 
 void test_search();
 
+
+void system_pause() {
+#ifdef _WIN32
+	system("pause");
+#endif
+}
+
 int main()
 {
     test_search();
 
+	system_pause();
     return 0;
 }
 
@@ -219,14 +227,19 @@ recreate_path(std::unordered_map<std::string, std::string>& visited, const std::
 #define nodes_file_name "43_nodes.txt"
 #define edges_file_name "43_edges.txt"
 #define input_dir "../input/"
+#define win_dir "..\\input\\"
 
 #if  defined (__GNUC__) || defined(__GNUG__)
 #define nodes_file input_dir nodes_file_name
 #define edges_file input_dir edges_file_name
 #else
-#define nodes_file nodes_file_name
-#define edges_file edges_file_name
+#define nodes_file_path win_dir nodes_file_name
+#define edges_file_path win_dir edges_file_name
 #endif
+
+	const char* nodes_file = nodes_file_path;
+	const char* edges_file = edges_file_path;
+	const char* generated_edges_file = "delete_me___generated_edge_costs.txt";
 
 /* Generate input data. */
 void generate_costs(Graph<Coordinates, unsigned, std::string>& world_map, const char *output_file);
@@ -247,8 +260,6 @@ void read_world_map(Graph<Coordinates, unsigned, std::string>& g)
 
     Graph<Coordinates, unsigned, std::string> temp;
     temp.read(nodes_in, edges_in);
-
-#define generated_edges_file "delete_me___generated_edge_costs.txt"
 
     print_green("Generating edge costs ...\n");
     generate_costs(temp, generated_edges_file);
