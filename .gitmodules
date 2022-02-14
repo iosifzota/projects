@@ -1,0 +1,3 @@
+[submodule "smart-cart"]
+	path = smart-cart
+	url = https://github.com/iosifzota/smart-cart
